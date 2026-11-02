@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aki Labs logo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1d1230;
+    --glass: #f4f0fb;
+    --liq: #8b3dff;
+    --liq-a: #a46cff;
+    --liq-hi: #c9a6ff;
+    --smoke: #e9e2f5;
+    --bg: #f7f5fb;
+    --card: #ffffff;
+    --text: #1d1230;
+    --muted: #6b6380;
+  }
+  body.coral { --liq: #ff5a3c; --liq-a: #ff7d63; --liq-hi: #ffb8a8; }
+  body.blue  { --liq: #2f7bff; --liq-a: #5c97ff; --liq-hi: #a9c8ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font: 700 28px Fredoka, sans-serif; margin: 0 0 4px; }
+  h2 { font: 700 20px Fredoka, sans-serif; margin: 40px 0 8px; }
+  p.note { color: var(--muted); margin: 0 0 16px; }
+  .swatches { display: flex; gap: 8px; margin: 12px 0 8px; flex-wrap: wrap; }
+  .swatches button { border: 2px solid var(--ink); border-radius: 999px; padding: 6px 14px; font: 600 14px Fredoka, sans-serif; cursor: pointer; background: #fff; color: var(--ink); }
+  .grid { align-items: start; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border-radius: 16px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .card.dark { background: #15101f; color: #fff; }
+  .card h3 { margin: 8px 0 2px; font: 700 16px Fredoka, sans-serif; }
+  .card p { margin: 0; color: var(--muted); font-size: 13px; }
+  .card.dark p { color: #a99fbf; }
+  svg { display: block; width: 100%; height: auto; }
+  .anim svg { max-width: 320px; margin: 0 auto; }
+  .card.dark { --halo: #fff; }
+  .halo { fill: none; stroke: var(--halo, transparent); stroke-width: 19; stroke-linejoin: round; }
+  .word { font-family: Fredoka, sans-serif; font-weight: 700; letter-spacing: 1px; }
+  .sizes { display: flex; align-items: end; gap: 24px; flex-wrap: wrap; }
+  .sizes svg { width: auto; }
+  /* live animation */
+  .anim .liquid { transform: translateY(110px); animation: fill 4.5s ease-in-out infinite; }
+  .anim .letterA { opacity: 0; animation: showA 4.5s ease-in-out infinite; }
+  .anim .face { opacity: 0; transform-origin: 100px 0; animation: face 4.5s ease-in-out infinite; }
+  .anim .puff { opacity: 0; animation: puff 4.5s ease-out infinite; }
+  .anim .puff.p2 { animation-delay: .15s; } .anim .puff.p3 { animation-delay: .3s; }
+  @keyframes fill { 0%,8% { transform: translateY(110px); } 38%,100% { transform: translateY(0); } }
+  @keyframes showA { 0%,30% { opacity: 0; } 45%,100% { opacity: 1; } }
+  @keyframes puff { 0%,38% { opacity: 0; transform: translateY(20px) scale(.4); } 50% { opacity: .9; } 62%,100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
+  @keyframes face { 0%,52% { opacity: 0; transform: translateY(16px) scale(.7); } 62%,86% { opacity: 1; transform: translateY(0) scale(1); } 96%,100% { opacity: 0; transform: translateY(-14px) scale(1.15); } }
+  @media (prefers-reduced-motion: reduce) { .anim * { animation: none !important; opacity: 1 !important; transform: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Aki Labs · pistes de logo</h1>
+  <p class="note">Fiole cartoon à trait épais ; le liquide qui monte révèle un « A » un peu plus clair ; la fumée qui sort forme un visage démoniaque. Esquisses vectorielles : formes et idées, pas encore la finition.</p>
+  <div class="swatches">
+    <button onclick="document.body.className=''">Violet</button>
+    <button onclick="document.body.className='coral'">Corail</button>
+    <button onclick="document.body.className='blue'">Bleu</button>
+  </div>
+
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <clipPath id="inside">
+        <path d="M84 40 L84 96 L40 190 Q33 208 54 208 L146 208 Q167 208 160 190 L116 96 L116 40 Z"/>
+      </clipPath>
+      <!-- the flask, liquid and A (static, full) -->
+      <g id="flask">
+        <path class="halo" d="M80 34 L80 92 L34 190 Q25 216 54 216 L146 216 Q175 216 166 190 L120 92 L120 34 Z"/>
+        <rect class="halo" x="68" y="20" width="64" height="18" rx="9"/>
+        <path d="M80 34 L80 92 L34 190 Q25 216 54 216 L146 216 Q175 216 166 190 L120 92 L120 34 Z" fill="var(--glass)"/>
+        <g clip-path="url(#inside)">
+          <g class="liquid">
+            <path d="M20 132 Q45 122 70 132 T120 132 T170 132 T220 132 L220 230 L20 230 Z" fill="var(--liq)"/>
+            <path class="letterA" fill="var(--liq-a)" fill-rule="evenodd" stroke="var(--liq-a)" stroke-width="6" stroke-linejoin="round"
+              d="M100 146 L127 202 L113 202 L108 190 L92 190 L87 202 L73 202 Z M100 158 L108 180 L92 180 Z"/>
+            <circle cx="66" cy="176" r="5" fill="var(--liq-hi)"/>
+            <circle cx="138" cy="160" r="4" fill="var(--liq-hi)"/>
+            <circle cx="132" cy="190" r="3" fill="var(--liq-hi)"/>
+          </g>
+        </g>
+        <path d="M80 34 L80 92 L34 190 Q25 216 54 216 L146 216 Q175 216 166 190 L120 92 L120 34 Z" fill="none" stroke="var(--ink)" stroke-width="9" stroke-linejoin="round"/>
+        <rect x="68" y="20" width="64" height="18" rx="9" fill="var(--glass)" stroke="var(--ink)" stroke-width="9"/>
+        <path d="M70 120 Q56 146 50 168" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".9"/>
+      </g>
+
+      <!-- face 1: smoke imp -->
+      <g id="face1">
+        <path class="halo" d="M60 -6 Q48 -40 70 -52 Q74 -80 100 -78 Q126 -80 130 -52 Q152 -40 140 -6 Q128 8 100 4 Q72 8 60 -6 Z M74 -64 Q66 -88 58 -96 Q80 -90 86 -72 M126 -64 Q134 -88 142 -96 Q120 -90 114 -72" stroke-width="15"/>
+        <path d="M60 -6 Q48 -40 70 -52 Q74 -80 100 -78 Q126 -80 130 -52 Q152 -40 140 -6 Q128 8 100 4 Q72 8 60 -6 Z" fill="var(--smoke)" stroke="var(--ink)" stroke-width="7" stroke-linejoin="round"/>
+        <path d="M74 -64 Q66 -88 58 -96 Q80 -90 86 -72" fill="var(--smoke)" stroke="var(--ink)" stroke-width="7" stroke-linejoin="round"/>
+        <path d="M126 -64 Q134 -88 142 -96 Q120 -90 114 -72" fill="var(--smoke)" stroke="var(--ink)" stroke-width="7" stroke-linejoin="round"/>
+        <path d="M76 -42 L94 -34 L78 -30 Z" fill="var(--liq)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+        <path d="M124 -42 L106 -34 L122 -30 Z" fill="var(--liq)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+        <path d="M78 -18 Q100 -2 122 -18" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/>
+        <path d="M88 -13 L91 -7 L94 -11 M106 -11 L109 -7 L112 -13" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+      </g>
+
+      <!-- face 2: bubbles -->
+      <g id="face2" fill="var(--liq-hi)" stroke="var(--ink)" stroke-width="5">
+        <path d="M70 -70 L64 -96 L82 -78 Z" stroke-linejoin="round"/>
+        <path d="M130 -70 L136 -96 L118 -78 Z" stroke-linejoin="round"/>
+        <circle cx="82" cy="-50" r="12"/>
+        <circle cx="118" cy="-50" r="12"/>
+        <path d="M72 -64 L92 -56 M128 -64 L108 -56" stroke-width="6" stroke-linecap="round" fill="none"/>
+        <circle cx="85" cy="-48" r="4" fill="var(--ink)" stroke="none"/>
+        <circle cx="115" cy="-48" r="4" fill="var(--ink)" stroke="none"/>
+        <circle cx="70" cy="-24" r="6"/><circle cx="82" cy="-15" r="6"/><circle cx="96" cy="-11" r="6"/>
+        <circle cx="110" cy="-12" r="6"/><circle cx="123" cy="-17" r="6"/><circle cx="133" cy="-27" r="6"/>
+        <circle cx="100" cy="6" r="4"/><circle cx="92" cy="18" r="3"/>
+      </g>
+
+      <!-- face 3: subtle wisp -->
+      <g id="face3">
+        <path d="M100 10 Q86 -10 100 -30 Q116 -52 98 -72 Q90 -82 100 -96" fill="none" stroke="var(--smoke)" stroke-width="26" stroke-linecap="round"/>
+        <path d="M100 10 Q86 -10 100 -30 Q116 -52 98 -72 Q90 -82 100 -96" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round" opacity=".25"/>
+        <path d="M84 -70 Q80 -88 72 -94 Q90 -90 92 -76 M116 -70 Q120 -88 128 -94 Q110 -90 108 -76" fill="var(--smoke)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+        <path d="M88 -56 L98 -50 L88 -48 Z M112 -56 L102 -50 L112 -48 Z" fill="var(--liq)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M90 -38 Q100 -30 110 -38" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>
+      </g>
+    </defs>
+  </svg>
+
+  <h2>1 · Le logo fixe</h2>
+  <div class="grid">
+    <div class="card">
+      <svg viewBox="0 -10 520 240"><use href="#flask"/><text x="200" y="140" class="word" font-size="68" fill="var(--ink)">AKI LABS</text></svg>
+      <h3>Horizontal</h3><p>Fiole + nom, pour le site et les présentations.</p>
+    </div>
+    <div class="card dark">
+      <svg viewBox="0 -10 520 240"><use href="#flask"/><text x="200" y="140" class="word" font-size="68" fill="#fff">AKI LABS</text></svg>
+      <h3>Sur fond sombre</h3><p>Version pour l'intro et le coin du jeu.</p>
+    </div>
+    <div class="card">
+      <svg viewBox="0 -10 200 300"><use href="#flask"/><text x="100" y="275" text-anchor="middle" class="word" font-size="40" fill="var(--ink)">AKI LABS</text></svg>
+      <h3>Vertical</h3><p>Pour l'écran d'intro.</p>
+    </div>
+  </div>
+
+  <h2>2 · Lisibilité en petit</h2>
+  <div class="card sizes">
+    <svg viewBox="0 10 200 215" height="128"><use href="#flask"/></svg>
+    <svg viewBox="0 10 200 215" height="64"><use href="#flask"/></svg>
+    <svg viewBox="0 10 200 215" height="32"><use href="#flask"/></svg>
+    <svg viewBox="0 10 200 215" height="20"><use href="#flask"/></svg>
+    <p>128 / 64 / 32 / 20 px : le « A » reste lisible jusqu'à 64 px, ensuite on voit la fiole et la couleur, c'est suffisant.</p>
+  </div>
+
+  <h2>3 · Le visage démoniaque : trois façons</h2>
+  <div class="grid">
+    <div class="card dark"><svg viewBox="0 -110 200 345"><use href="#face1"/><use href="#flask"/></svg>
+      <h3>A · Diablotin de fumée</h3><p>Un nuage avec cornes, yeux plissés de la couleur du liquide et sourire en coin. Le plus lisible et le plus « personnage ».</p></div>
+    <div class="card dark"><svg viewBox="0 -110 200 345"><use href="#face2"/><use href="#flask"/></svg>
+      <h3>B · Visage de bulles</h3><p>Les bulles se rangent en yeux, sourcils, cornes et sourire. Très « labo », plus graphique.</p></div>
+    <div class="card dark"><svg viewBox="0 -110 200 345"><use href="#face3"/><use href="#flask"/></svg>
+      <h3>C · Volute discrète</h3><p>Une simple volute de fumée où apparaissent un instant les cornes et les yeux. Le plus subtil et le plus élégant.</p></div>
+  </div>
+
+  <h2>4 · Aperçu de l'animation (maquette, ~4 s en boucle)</h2>
+  <div class="grid">
+    <div class="card dark anim">
+      <svg viewBox="0 -110 200 345">
+        <g class="face"><use href="#face1"/></g>
+        <circle class="puff" cx="100" cy="10" r="10" fill="var(--smoke)"/>
+        <circle class="puff p2" cx="90" cy="0" r="7" fill="var(--smoke)"/>
+        <circle class="puff p3" cx="110" cy="-6" r="8" fill="var(--smoke)"/>
+        <g>
+          <path class="halo" d="M80 34 L80 92 L34 190 Q25 216 54 216 L146 216 Q175 216 166 190 L120 92 L120 34 Z"/>
+          <rect class="halo" x="68" y="20" width="64" height="18" rx="9"/>
+          <path d="M80 34 L80 92 L34 190 Q25 216 54 216 L146 216 Q175 216 166 190 L120 92 L120 34 Z" fill="var(--glass)"/>
+          <g clip-path="url(#inside)">
+            <g class="liquid">
+              <path d="M20 132 Q45 122 70 132 T120 132 T170 132 T220 132 L220 230 L20 230 Z" fill="var(--liq)"/>
+              <path class="letterA" fill="var(--liq-a)" fill-rule="evenodd" stroke="var(--liq-a)" stroke-width="6" stroke-linejoin="round" d="M100 146 L127 202 L113 202 L108 190 L92 190 L87 202 L73 202 Z M100 158 L108 180 L92 180 Z"/>
+              <circle cx="66" cy="176" r="5" fill="var(--liq-hi)"/><circle cx="138" cy="160" r="4" fill="var(--liq-hi)"/>
+            </g>
+          </g>
+          <path d="M80 34 L80 92 L34 190 Q25 216 54 216 L146 216 Q175 216 166 190 L120 92 L120 34 Z" fill="none" stroke="var(--ink)" stroke-width="9" stroke-linejoin="round"/>
+          <rect x="68" y="20" width="64" height="18" rx="9" fill="var(--glass)" stroke="var(--ink)" stroke-width="9"/>
+          <path d="M70 120 Q56 146 50 168" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".9"/>
+        </g>
+      </svg>
+      <h3>Déroulé</h3>
+      <p>Fiole vide → le liquide monte en ondulant, le « A » apparaît → bouffées de fumée → le diablotin se forme, sourit → il se dissipe → logo final. Dans Spine : bulles, rebond de la fiole, clin d'œil du diablotin.</p>
+    </div>
+  </div>
+</main>
+</body>
+</html>

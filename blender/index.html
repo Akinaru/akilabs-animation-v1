@@ -1,0 +1,6 @@
+<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Aki Labs intro 3D</title>
+<style>body{margin:0;background:#0b0418;color:#eee;font:14px system-ui;display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px}video{max-height:80vh;width:100%;max-width:100%;border-radius:12px}button{background:#222;color:#fff;border:1px solid #555;border-radius:99px;padding:6px 14px;cursor:pointer}</style>
+<video id="v" src="aki-intro-v2.mp4" autoplay muted loop playsinline controls></video>
+<div><button onclick="v.playbackRate=1">Vitesse normale</button> <button onclick="v.playbackRate=.25">Ralenti ×0,25</button> <button onclick="v.currentTime=0;v.play()">Rejouer</button></div>
+<p>Rendu Blender (3D, ombrage cartoon + trait pinceau). 4 s : chute, remplissage, A, AKI LABS, puis phase d'attente.</p>
+<script>const v=document.getElementById('v')</script></html>

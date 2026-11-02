@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aki Labs intro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+  :root {
+    --ink: #170b2c;
+    --bg1: #2b1166;
+    --bg2: #0f0624;
+    --glass: #ece6fb;
+    --glass-sh: #cfc3ee;
+    --liq: #7b2ff7;
+    --liq-dk: #5417c4;
+    --liq-hi: #a978ff;
+    --liq-a: #9b5cff;
+    --smoke: #d9cff2;
+    --smoke-sh: #b3a2dd;
+    --eye: #ff5bd1;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg2); color: #fff; font: 14px system-ui, sans-serif; overflow: hidden; }
+  #stage { position: fixed; inset: 0 0 56px 0; display: grid; place-items: center;
+    background: radial-gradient(60% 60% at 50% 45%, var(--bg1), var(--bg2)); }
+  #glow { position: absolute; width: 70vmin; height: 70vmin; border-radius: 50%;
+    background: radial-gradient(circle, rgba(140,70,255,.55), rgba(140,70,255,0) 65%); opacity: 0; }
+  svg#logo { height: min(80vh, 120vw); width: auto; overflow: visible; position: relative; }
+  .word { font-family: 'Lilita One', sans-serif; }
+  #ui { position: fixed; left: 16px; right: 16px; bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; z-index: 5; }
+  #ui button { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 7px 14px; cursor: pointer; font: inherit; }
+  #ui button.on { background: #fff; color: #111; }
+  #ui label { opacity: .8; display: flex; gap: 6px; align-items: center; }
+  #flash { position: fixed; inset: 0; background: #f3ecff; opacity: 0; pointer-events: none; z-index: 3; }
+  #game { position: fixed; inset: 0; display: grid; place-items: center; opacity: 0; z-index: 2;
+    background: linear-gradient(160deg, #3b2a80, #1b5f7a); font: 28px 'Lilita One', sans-serif; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="glow"></div>
+  <svg id="logo" viewBox="0 -200 400 760" aria-label="Aki Labs">
+    <defs>
+      <path id="flaskShape" d="M168 80 L168 168 C168 182 164 192 158 202 L84 350 C71 376 69 393 79 407 C89 421 107 425 129 425 L271 425 C293 425 311 421 321 407 C331 393 329 376 316 350 L242 202 C236 192 232 182 232 168 L232 80 Z"/>
+      <clipPath id="inside"><use href="#flaskShape"/></clipPath>
+      <path id="aShape" fill-rule="evenodd" d="M187 300 L213 300 L251 402 L226 402 L219 383 L181 383 L174 402 L149 402 Z M200 331 L212 364 L188 364 Z"/>
+      <clipPath id="aClip"><use href="#aShape"/></clipPath>
+      <linearGradient id="sweepGrad" x1="0" x2="1">
+        <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+        <stop offset=".5" stop-color="#fff" stop-opacity=".85"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+
+    <!-- ===== smoke demon (behind flask neck) ===== -->
+    <g id="demon">
+      <g id="wisp">
+        <path d="M200 70 C186 50 216 34 200 6" fill="none" stroke="var(--ink)" stroke-width="38" stroke-linecap="round"/>
+        <path d="M200 70 C186 50 216 34 200 6" fill="none" stroke="var(--smoke)" stroke-width="24" stroke-linecap="round"/>
+      </g>
+      <g id="head">
+        <g id="hornL"><path d="M164 -104 C134 -112 112 -140 116 -184 C128 -158 150 -144 182 -134 Z" fill="var(--smoke-sh)" stroke="var(--ink)" stroke-width="9" stroke-linejoin="round"/></g>
+        <g id="hornR"><path d="M236 -104 C266 -112 288 -140 284 -184 C272 -158 250 -144 218 -134 Z" fill="var(--smoke-sh)" stroke="var(--ink)" stroke-width="9" stroke-linejoin="round"/></g>
+        <g id="cloud">
+          <g fill="var(--ink)">
+            <circle class="puff" cx="200" cy="-38" r="66"/><circle class="puff" cx="146" cy="-14" r="44"/>
+            <circle class="puff" cx="254" cy="-14" r="44"/><circle class="puff" cx="166" cy="-78" r="44"/>
+            <circle class="puff" cx="234" cy="-78" r="44"/><circle class="puff" cx="200" cy="8" r="40"/>
+          </g>
+          <g fill="var(--smoke)">
+            <circle class="puff" cx="200" cy="-38" r="60"/><circle class="puff" cx="146" cy="-14" r="38"/>
+            <circle class="puff" cx="254" cy="-14" r="38"/><circle class="puff" cx="166" cy="-78" r="38"/>
+            <circle class="puff" cx="234" cy="-78" r="38"/><circle class="puff" cx="200" cy="8" r="34"/>
+          </g>
+          <path d="M120 -6 C150 26 250 26 280 -6 C270 22 236 44 200 44 C164 44 130 22 120 -6 Z" fill="var(--smoke-sh)" opacity=".8"/>
+          <path d="M150 -96 C160 -110 176 -114 188 -110" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".8"/>
+        </g>
+        <g id="face" transform="translate(200 -40) scale(1.22) translate(-200 40)">
+          <g id="eyeL"><path d="M160 -60 Q180 -76 198 -52 Q178 -44 160 -60 Z" fill="var(--eye)" stroke="var(--ink)" stroke-width="6" stroke-linejoin="round"/><ellipse cx="184" cy="-56" rx="4" ry="8" fill="var(--ink)"/></g>
+          <g id="eyeR"><path d="M240 -60 Q220 -76 202 -52 Q222 -44 240 -60 Z" fill="var(--eye)" stroke="var(--ink)" stroke-width="6" stroke-linejoin="round"/><ellipse cx="216" cy="-56" rx="4" ry="8" fill="var(--ink)"/></g>
+          <g id="grin">
+            <path d="M156 -28 Q200 14 244 -28 Q200 -8 156 -28 Z" fill="var(--ink)" stroke="var(--ink)" stroke-width="6" stroke-linejoin="round"/>
+            <path d="M182 -17 L188 -4 L194 -15 Z" fill="#fff"/>
+            <path d="M206 -15 L212 -4 L218 -17 Z" fill="#fff"/>
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <!-- ===== flask ===== -->
+    <g id="flask">
+      <use href="#flaskShape" fill="var(--glass)"/>
+      <g clip-path="url(#inside)">
+        <path d="M244 210 C270 270 300 330 304 430 L360 430 L360 200 Z" fill="var(--glass-sh)"/>
+        <g id="liquid">
+          <g id="wave"><path d="M-400 262 C-375 250 -350 250 -325 262 S-275 274 -250 262 S-200 250 -175 262 S-125 274 -100 262 S-50 250 -25 262 S25 274 50 262 S100 250 125 262 S175 274 200 262 S250 250 275 262 S325 274 350 262 S400 250 425 262 S475 274 500 262 S550 250 575 262 S625 274 650 262 L650 460 L-400 460 Z" fill="var(--liq)"/>
+            <path d="M-400 262 C-375 250 -350 250 -325 262 S-275 274 -250 262 S-200 250 -175 262 S-125 274 -100 262 S-50 250 -25 262 S25 274 50 262 S100 250 125 262 S175 274 200 262 S250 250 275 262 S325 274 350 262 S400 250 425 262 S475 274 500 262 S550 250 575 262 S625 274 650 262" fill="none" stroke="var(--liq-hi)" stroke-width="9"/></g>
+          <path d="M262 266 C290 330 302 380 298 440 L380 440 L380 266 Z" fill="var(--liq-dk)" opacity=".75"/>
+          <path d="M40 396 C140 420 260 420 360 396 L360 460 L40 460 Z" fill="var(--liq-dk)"/>
+          <g id="letterA">
+            <use href="#aShape" fill="var(--liq-a)" stroke="var(--liq-a)" stroke-width="7" stroke-linejoin="round"/>
+            <g clip-path="url(#aClip)"><rect id="sweep" x="80" y="290" width="60" height="130" fill="url(#sweepGrad)" transform="skewX(-18)"/></g>
+          </g>
+          <g id="bubbles" fill="var(--liq-hi)" stroke="var(--ink)" stroke-width="3"></g>
+        </g>
+      </g>
+      <use href="#flaskShape" fill="none" stroke="var(--ink)" stroke-width="13" stroke-linejoin="round"/>
+      <rect x="144" y="56" width="112" height="30" rx="15" fill="var(--glass)" stroke="var(--ink)" stroke-width="13"/>
+      <path d="M160 64 L196 64" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+      <path id="hl1" d="M156 214 L104 318" stroke="#fff" stroke-width="13" stroke-linecap="round" opacity=".9"/>
+      <circle cx="94" cy="344" r="7" fill="#fff" opacity=".9"/>
+      <path d="M182 96 L182 160" stroke="#fff" stroke-width="9" stroke-linecap="round" opacity=".75"/>
+    </g>
+
+    <!-- ===== wordmark ===== -->
+    <g id="wordmark" text-anchor="middle">
+      <g id="w1">
+        <text x="200" y="528" class="word" font-size="104" fill="var(--liq-dk)" stroke="var(--liq-dk)" stroke-width="22" stroke-linejoin="round" transform="translate(0 8)">AKI</text>
+        <text x="200" y="528" class="word" font-size="104" fill="#fff" stroke="var(--ink)" stroke-width="18" stroke-linejoin="round" paint-order="stroke">AKI</text>
+      </g>
+      <g id="w2">
+        <text x="200" y="596" class="word" font-size="52" letter-spacing="14" fill="var(--liq-hi)" stroke="var(--ink)" stroke-width="12" stroke-linejoin="round" paint-order="stroke">LABS</text>
+      </g>
+    </g>
+  </svg>
+</div>
+<div id="flash"></div>
+<div id="game">Grumpy Mole · écran de chargement du jeu</div>
+
+<div id="ui">
+  <button id="replay">Rejouer</button>
+  <button id="slow">Ralenti ×0,25</button>
+  <button id="outroBtn">Chargement fini → sortie</button>
+  <label>Chargement <input id="prog" type="range" min="0" max="100" value="35"></label>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const LEVEL_LOW = 22, LEVEL_FULL = -42;               // liquid y offset: 0 % loaded → 100 % loaded
+const LEVEL_EMPTY = 200;                               // before the fill
+const levelFor = (p) => LEVEL_LOW + (LEVEL_FULL - LEVEL_LOW) * p;
+let progress = 0.35, idleTl, intro, wobble, bubbleTimer;
+
+// bubbles that rise inside the liquid
+function bubble(big) {
+  const g = $('#bubbles');
+  const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  const x = 120 + Math.random() * 160, r = big ? 7 + Math.random() * 4 : 3 + Math.random() * 4;
+  c.setAttribute('cx', x); c.setAttribute('cy', 430); c.setAttribute('r', r);
+  g.appendChild(c);
+  const top = 262 + Number(gsap.getProperty('#liquid','y')) + 8;
+  gsap.timeline({ onComplete: () => c.remove() })
+    .to(c, { attr: { cy: top }, duration: 1.1 + Math.random() * .6, ease: 'power1.in' })
+    .to(c, { attr: { cx: x + (Math.random() * 16 - 8) }, duration: .4, ease: 'sine.inOut', repeat: 3, yoyo: true }, 0)
+    .to(c, { scale: 1.8, opacity: 0, transformOrigin: '50% 50%', duration: .12, ease: 'power2.out' });
+}
+
+function resetAll() {
+  gsap.killTweensOf('*'); if (idleTl) idleTl.kill(); if (intro) intro.kill(); if (wobble) wobble.kill();
+  clearInterval(bubbleTimer); $('#bubbles').innerHTML = '';
+  gsap.set(['#flash', '#game'], { opacity: 0 });
+  gsap.set('#glow', { opacity: 0, scale: .6 });
+  gsap.set('#flask', { y: -520, scaleX: 1, scaleY: 1, rotation: 0, transformOrigin: '50% 100%' });
+  gsap.set('#liquid', { y: LEVEL_EMPTY + 40 });
+  gsap.set('#letterA', { opacity: 0 });
+  gsap.set('#sweep', { x: -120 });
+  gsap.set(['#w1', '#w2'], { opacity: 0, y: 40, scale: .6, transformOrigin: '50% 50%' });
+  gsap.set('#wisp', { scaleY: 0, transformOrigin: '50% 100%' });
+  gsap.set('.puff', { scale: 0, transformOrigin: '50% 50%' });
+  gsap.set('#cloud > path', { opacity: 0 });
+  gsap.set(['#hornL', '#hornR'], { scale: 0, transformOrigin: '50% 100%' });
+  gsap.set(['#eyeL', '#eyeR'], { scaleY: 0, transformOrigin: '50% 50%' });
+  gsap.set('#grin', { scaleX: 0, transformOrigin: '50% 50%' });
+  gsap.set('#head', { y: 0, x: 0, rotation: 0, transformOrigin: '50% 100%' });
+}
+
+function playIntro() {
+  resetAll();
+  wobble = gsap.to('#wave', { x: -100, duration: .7, ease: 'none', repeat: -1 });
+  intro = gsap.timeline({ onComplete: startIdle });
+  intro
+    .to('#glow', { opacity: 1, scale: 1, duration: .5, ease: 'power2.out' }, 0)
+    // drop + squash & stretch
+    .to('#flask', { y: 0, duration: .3, ease: 'power3.in' }, 0)
+    .to('#flask', { scaleY: .8, scaleX: 1.16, duration: .07, ease: 'power2.out' }, .3)
+    .to('#flask', { scaleY: 1.07, scaleX: .95, duration: .1, ease: 'power2.out' }, .37)
+    .to('#flask', { scaleY: 1, scaleX: 1, duration: .3, ease: 'elastic.out(1, .45)' }, .47)
+    // fill with slosh
+    .to('#liquid', { y: levelFor(progress), duration: .65, ease: 'power2.inOut' }, .34)
+    .call(() => { for (let i = 0; i < 5; i++) setTimeout(() => bubble(i % 2), i * 90); }, null, .45)
+    // the A lights up with a sweep
+    .to('#letterA', { opacity: 1, duration: .25, ease: 'power1.out' }, .8)
+    .to('#sweep', { x: 260, duration: .45, ease: 'power2.inOut' }, .85)
+    // wordmark, staggered with overshoot
+    .to('#w1', { opacity: 1, y: 0, scale: 1, duration: .45, ease: 'back.out(2.6)' }, .95)
+    .to('#w2', { opacity: 1, y: 0, scale: 1, duration: .4, ease: 'back.out(2.2)' }, 1.07)
+    // smoke rises and becomes the demon
+    .to('#wisp', { scaleY: 1, duration: .18, ease: 'power2.out' }, 1.18)
+    .to('.puff', { scale: 1, duration: .32, ease: 'back.out(2.4)', stagger: { each: .03, from: 'end' } }, 1.26)
+    .to('#cloud > path', { opacity: 1, duration: .2 }, 1.4)
+    .to(['#hornL', '#hornR'], { scale: 1, duration: .25, ease: 'back.out(3)', stagger: .05 }, 1.44)
+    .to(['#eyeL', '#eyeR'], { scaleY: 1, duration: .14, ease: 'power2.out' }, 1.5)
+    .to('#grin', { scaleX: 1, duration: .2, ease: 'back.out(2.5)' }, 1.56)
+    // wink + little cackle bob
+    .to('#eyeR', { scaleY: .1, duration: .07, yoyo: true, repeat: 1 }, 1.74)
+    .to('#head', { y: -6, duration: .08, yoyo: true, repeat: 3, ease: 'sine.inOut' }, 1.74);
+}
+
+function startIdle() {
+  idleTl = gsap.timeline({ repeat: -1 });
+  idleTl
+    .to('#head', { y: -8, rotation: 2, duration: 1, ease: 'sine.inOut' }, 0)
+    .to('#head', { y: 0, rotation: -1, duration: 1, ease: 'sine.inOut' }, 1)
+    .to(['#eyeL', '#eyeR'], { scaleY: .1, duration: .06, yoyo: true, repeat: 1 }, 1.4)
+    .to('#sweep', { x: -120, duration: 0 }, 0)
+    .to('#sweep', { x: 260, duration: .6, ease: 'power2.inOut' }, 1.2)
+    .to('#flask', { scaleY: 1.015, scaleX: .99, duration: 1, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 0);
+  bubbleTimer = setInterval(() => bubble(Math.random() < .3), 380);
+}
+
+function setProgress(p) {
+  progress = p;
+  gsap.to('#liquid', { y: levelFor(p), duration: .4, ease: 'power2.out', overwrite: 'auto' });
+}
+
+function outro() {
+  if (intro && intro.isActive()) intro.progress(1);
+  const tl = gsap.timeline();
+  tl.to('#liquid', { y: levelFor(1), duration: .25, ease: 'power2.in' })
+    .to('#flask', { scaleY: .9, scaleX: 1.08, duration: .08 }, .2)
+    .to('#flask', { scaleY: 1.1, scaleX: .94, duration: .1 }, .28)
+    .to('#head', { scale: 3.2, y: -60, opacity: 0, duration: .45, ease: 'power2.in', transformOrigin: '50% 50%' }, .28)
+    .to('#flash', { opacity: 1, duration: .14, ease: 'power2.in' }, .5)
+    .set('#game', { opacity: 1 }, .64)
+    .to('#flash', { opacity: 0, duration: .35, ease: 'power2.out' }, .64);
+}
+
+$('#replay').onclick = () => { $('#prog').value = 35; progress = .35; gsap.globalTimeline.timeScale($('#slow').classList.contains('on') ? .25 : 1); playIntro(); };
+$('#slow').onclick = (e) => { e.target.classList.toggle('on'); gsap.globalTimeline.timeScale(e.target.classList.contains('on') ? .25 : 1); };
+$('#outroBtn').onclick = outro;
+$('#prog').oninput = (e) => setProgress(e.target.value / 100);
+document.fonts.ready.then(playIntro);
+</script>
+</body>
+</html>
