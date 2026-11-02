@@ -8,7 +8,7 @@
 <style>
   html, body { margin: 0; height: 100%; background: #0b0418; color: #eee; font: 14px system-ui, sans-serif; overflow: hidden; }
   #ui { position: fixed; left: 16px; right: 16px; bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; z-index: 5; }
-  button { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 7px 14px; cursor: pointer; font: inherit; }
+  select, button { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 7px 14px; cursor: pointer; font: inherit; }
   #pct { min-width: 120px; opacity: .8; }
   #game { position: fixed; inset: 0; display: none; place-items: center; background: linear-gradient(160deg,#3b2a80,#1b5f7a); font-size: 26px; }
 </style>
@@ -22,6 +22,7 @@
   <button id="manual">Manuel</button>
   <input id="slider" type="range" min="0" max="100" value="0" disabled>
   <button id="done" disabled>Fin du chargement</button>
+  <label>Sortie <select id="outro"><option value="wipe">Vague de liquide</option><option value="zoom">Plongée dans le liquide</option><option value="settle">Rebond + lueur</option></select></label>
   <span id="pct"></span>
 </div>
 <script type="module">
@@ -53,7 +54,7 @@ async function run(ms) {
   }, 120);
 }
 async function end() {
-  await intro.finish();
+  await intro.finish($('#outro').value);
   $('#game').style.display = 'grid';
 }
 document.querySelectorAll('[data-ms]').forEach((b) => (b.onclick = () => run(+b.dataset.ms)));

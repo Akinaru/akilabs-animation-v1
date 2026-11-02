@@ -2,7 +2,7 @@
 //
 //   const intro = await AkiIntro.create(app, { base: './assets/' });
 //   loader.onProgress = (p) => intro.setProgress(p);   // 0..1, real loading progress
-//   await intro.finish();                               // plays the outro, resolves when done
+//   await intro.finish('wipe');                         // outro: 'wipe' | 'zoom' | 'settle'; resolves when done
 //   intro.destroy();
 //
 // The liquid level follows the loading progress, the liquid sloshes, bubbles rise out of the
@@ -56,6 +56,7 @@ export class AkiIntro {
     const root = this.root = new PIXI.Container();
     app.stage.addChild(root);
     root.addChild(new PIXI.Sprite(tex.bg));
+    this.outroStyle = 'wipe';
 
     // flask rig: pivot at the base of the flask, for the drop and squash
     const rig = this.rig = new PIXI.Container();
@@ -75,6 +76,9 @@ export class AkiIntro {
     const surfClip = new PIXI.Sprite(tex.liquid);
     this.surface.mask = surfClip;
     liquidGroup.addChild(this.surface, surfClip);
+    this.flash = new PIXI.Sprite(tex.liquid);
+    this.flash.blendMode = 'add'; this.flash.alpha = 0;
+    liquidGroup.addChild(this.flash);
     liquidGroup.mask = this.waveMask;
     rig.addChild(liquidGroup, this.waveMask);
     rig.addChild(new PIXI.Sprite(tex.glass));
@@ -103,6 +107,9 @@ export class AkiIntro {
     this.hideOffset = this.cx - tb[2] - 10;          // text right edge behind the flask centre
     this.aki.x = this.labs.x = this.hideOffset;
 
+    this.wipe = new PIXI.Graphics();               // screen-space liquid wipe (outro 'wipe')
+    app.stage.addChild(this.wipe);
+
     this.resize = () => {
       const s = Math.min(app.screen.width / W, app.screen.height / H);
       root.scale.set(s);
@@ -119,9 +126,10 @@ export class AkiIntro {
   setProgress(p) { this.progress = clamp(p, 0, 1); }
 
   /** Plays the outro once the intro has finished; resolves when the screen is clear. */
-  async finish() {
+  async finish(style = this.outroStyle) {
     await this.introDone;
-    this.finishing = true; this.finishT = 0;
+    this.style = style;
+    this.finishing = true; this.finishT = 0; this.bounceAt = this.t;
     this.progress = 1;
     return new Promise((r) => (this._finishResolve = r));
   }
@@ -129,6 +137,7 @@ export class AkiIntro {
   destroy() {
     this.app.ticker.remove(this.tick);
     window.removeEventListener('resize', this.resize);
+    this.wipe.destroy();
     this.root.destroy({ children: true });
   }
 
@@ -150,7 +159,13 @@ export class AkiIntro {
       const k = t - LAND;
       const sq = Math.exp(-k * 7) * Math.cos(k * 26);  // damped oscillation
       const breathe = this.introOver ? 0.008 * Math.sin(t * 2.2) : 0;
-      this.rig.scale.set(1 + 0.16 * sq - breathe * 0.5, 1 - 0.2 * sq + breathe);
+      let bx = 0, by = 0;
+      if (this.finishing && this.style === 'settle') {
+        const kb = t - this.bounceAt;
+        const b = Math.exp(-kb * 6) * Math.sin(kb * 24);
+        bx = -0.07 * b; by = 0.1 * b;
+      }
+      this.rig.scale.set(1 + 0.16 * sq - breathe * 0.5 + bx, 1 - 0.2 * sq + breathe + by);
       if (!this.landed) { this.landed = true; this.tiltV += 0.9; this.energy = 1; }
     }
 
@@ -158,11 +173,11 @@ export class AkiIntro {
     let target;
     if (this.finishing) {
       this.finishT += dt;
-      target = 1.45;
+      target = 1.0;
     } else if (t < LAND + 0.1) target = -0.08;
     else if (t < LAND + 1.0) target = Math.max(this.progress, 0.22) * easeInOut((t - LAND - 0.1) / 0.9);
     else target = Math.max(this.progress, 0.22);
-    const rate = this.finishing ? 4 : t < LAND + 1.0 ? 30 : 2.5;
+    const rate = this.finishing ? 6 : t < LAND + 1.0 ? 30 : 2.5;
     const prev = this.shown;
     this.shown += (target - this.shown) * (1 - Math.exp(-rate * dt));
     this.tiltV += (this.shown - prev) * 1.5;     // rising liquid feeds the slosh
@@ -185,8 +200,8 @@ export class AkiIntro {
     // ---- bubbles ----
     const live = t > LAND + 0.5 && this.shown > 0.05;
     if (live) {
-      this.spawnIn -= dt * (this.finishing ? 6 : 1);
-      if (this.spawnIn <= 0) { this.spawnBubble(); this.spawnIn = this.finishing ? rand(0.02, 0.06) : rand(0.22, 0.55); }
+      this.spawnIn -= dt;
+      if (this.spawnIn <= 0) { this.spawnBubble(); this.spawnIn = rand(0.22, 0.55); }
       this.innerIn -= dt;
       if (this.innerIn <= 0) { this.spawnInner(); this.innerIn = rand(0.12, 0.3); }
     }
@@ -200,15 +215,46 @@ export class AkiIntro {
     slide(this.aki, 1.0); slide(this.labs, 1.12);
     if (!this.introOver && t > 1.75) { this.introOver = true; this._introResolve(); }
 
-    // ---- outro: fills up, bubble burst, then fade ----
-    if (this.finishing) {
-      const k = this.finishT;
-      if (k > 0.75) {
-        const f = clamp((k - 0.75) / 0.35, 0, 1);
-        this.root.alpha = 1 - f;
-        const s = this.root.scale.x;
-        if (!this.baseScale) this.baseScale = s;
-        if (f >= 1 && !this.done) { this.done = true; this._finishResolve?.(); }
+    // ---- outro ----
+    if (this.finishing) this.outro(dt);
+  }
+
+  outro(dt) {
+    const k = this.finishT, app = this.app, W = this.W, H = this.H;
+    const end = () => { if (!this.done) { this.done = true; this._finishResolve?.(); } };
+    if (this.style === 'settle') {
+      // the flask is full: little bounce, the liquid glows, the lock-up gently fades out
+      this.flash.alpha = k < 0.15 ? k / 0.15 * 0.55 : Math.max(0, 0.55 - (k - 0.15) * 1.4);
+      const f = clamp((k - 0.45) / 0.4, 0, 1);
+      this.root.alpha = 1 - f;
+      if (f >= 1) end();
+    } else if (this.style === 'zoom') {
+      // dive into the liquid: zoom towards the liquid, which fills the screen, then fade
+      if (!this.zoom0) this.zoom0 = { s: this.root.scale.x, x: this.root.x, y: this.root.y };
+      const z = this.zoom0, p = clamp((k - 0.1) / 0.6, 0, 1), e = p * p * p;
+      const s = z.s * lerp(1, 14, e);
+      const fx = this.cx, fy = this.levelY(this.shown) + 120;       // a point inside the liquid
+      const sx = z.x + fx * z.s, sy = z.y + fy * z.s;              // its screen position at rest
+      this.root.scale.set(s); this.root.position.set(sx - fx * s, sy - fy * s);
+      const f = clamp((k - 0.62) / 0.3, 0, 1);
+      this.root.alpha = 1 - f;
+      if (f >= 1) end();
+    } else {
+      // 'wipe': the violet liquid rises over the whole screen with a wavy edge, then clears
+      const sw = app.screen.width, sh = app.screen.height;
+      const p = clamp(k / 0.65, 0, 1), rise = easeInOut(p);
+      const y0 = lerp(sh + 60, -80, rise), t = this.t;
+      const pts = [];
+      for (let x = -20; x <= sw + 20; x += 16) pts.push(x, y0 + 22 * Math.sin(x * 0.006 + t * 5) + 10 * Math.sin(x * 0.017 - t * 7));
+      this.wipe.clear().poly([...pts, sw + 20, sh + 20, -20, sh + 20]).fill(0x7429f2);
+      this.wipe.moveTo(pts[0], pts[1]);
+      for (let i = 2; i < pts.length; i += 2) this.wipe.lineTo(pts[i], pts[i + 1] + 4);
+      this.wipe.stroke({ width: 12, color: SURFACE });
+      if (p >= 1) {
+        this.root.alpha = 0;
+        const f = clamp((k - 0.7) / 0.3, 0, 1);
+        this.wipe.alpha = 1 - f;
+        if (f >= 1) end();
       }
     }
   }
@@ -225,7 +271,7 @@ export class AkiIntro {
     g.scale.set(0.2);
     this.bubbleLayer.addChild(g);
     const popY = Math.random() < 0.75 ? rand(this.geo.neckTop - 280, this.geo.neckTop - 60) : rand(this.geo.neckTop + 60, this.geo.neckZ);
-    this.bubbles.push({ g, rad, vy: rand(150, 210) * (this.finishing ? 1.5 : 1), ph: rand(0, 6), age: 0, popY, drift: rand(-25, 25) });
+    this.bubbles.push({ g, rad, vy: rand(150, 210), ph: rand(0, 6), age: 0, popY, drift: rand(-25, 25) });
   }
 
   spawnInner() {
