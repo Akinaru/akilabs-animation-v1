@@ -2,7 +2,7 @@
 //
 //   const intro = await AkiIntro.create(app, { base: './assets/' });
 //   loader.onProgress = (p) => intro.setProgress(p);   // 0..1, real loading progress
-//   await intro.finish('wipe');                         // outro: 'wipe' | 'zoom' | 'settle'; resolves when done
+//   await intro.finish();                               // outro 'settle' (default), 'wipe' or 'zoom'; resolves when done
 //   intro.destroy();
 //
 // The liquid level follows the loading progress, the liquid sloshes, bubbles rise out of the
@@ -56,7 +56,7 @@ export class AkiIntro {
     const root = this.root = new PIXI.Container();
     app.stage.addChild(root);
     root.addChild(new PIXI.Sprite(tex.bg));
-    this.outroStyle = 'wipe';
+    this.outroStyle = 'settle';
 
     // flask rig: pivot at the base of the flask, for the drop and squash
     const rig = this.rig = new PIXI.Container();
@@ -141,9 +141,8 @@ export class AkiIntro {
     this.root.destroy({ children: true });
   }
 
-  levelY(v) { // v: 0 empty .. 1 idle max .. >1 up to the shoulders
-    const g = this.geo;
-    return v <= 1 ? lerp(g.levelBottom, g.levelIdleMax, v) : lerp(g.levelIdleMax, g.levelTop, v - 1);
+  levelY(v) { // v: 0 empty .. 1 full to the top of the neck
+    return lerp(this.geo.levelBottom, this.geo.levelTop, v);
   }
 
   update(dt) {
@@ -223,7 +222,9 @@ export class AkiIntro {
     const k = this.finishT, app = this.app, W = this.W, H = this.H;
     const end = () => { if (!this.done) { this.done = true; this._finishResolve?.(); } };
     if (this.style === 'settle') {
-      // the flask is full: little bounce, the liquid glows, the lock-up gently fades out
+      // fill to the very top first, then little bounce, the liquid glows, the lock-up gently fades out
+      if (!this.fullAt) { if (this.shown < 0.97) return; this.fullAt = this.t; this.bounceAt = this.t; }
+      const k = this.t - this.fullAt;
       this.flash.alpha = k < 0.15 ? k / 0.15 * 0.55 : Math.max(0, 0.55 - (k - 0.15) * 1.4);
       const f = clamp((k - 0.45) / 0.4, 0, 1);
       this.root.alpha = 1 - f;

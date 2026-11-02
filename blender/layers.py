@@ -342,7 +342,7 @@ import mathutils
 # liquid: still, full (level above the highest idle level), no waves, no tilt
 cut.animation_data_clear()
 for w in (w1, w2, w3): w.height = 0.0
-cut.location = (OX, 0, 1.30 - 1.0); cut.rotation_euler = (0, 0, 0)
+cut.scale = (1.6, 1.6, 3.0); cut.location = (OX, 0, 2.60 - 3.0); cut.rotation_euler = (0, 0, 0)
 rig.animation_data_clear(); rig.location = (OX, 0, 0); rig.scale = (1, 1, 1)
 groups = {
     'glass': [flask],
@@ -365,9 +365,9 @@ geo = {
     'pivot': px(OX, 0, 0),
     'glassRight': [px(OX + r, 0, z) for r, z in glass_prof],
     'glassLeft': [px(OX - r, 0, z) for r, z in glass_prof],
-    'liquidRight': [px(OX + radius_at(z) - 0.05, 0, z) for z in [0.06 + 0.05 * i for i in range(26)]],
-    'liquidLeft': [px(OX - radius_at(z) + 0.05, 0, z) for z in [0.06 + 0.05 * i for i in range(26)]],
-    'levelBottom': px(OX, 0, 0.10)[1], 'levelTop': px(OX, 0, 1.22)[1], 'levelIdleMax': px(OX, 0, TOP)[1],
+    'liquidRight': [px(OX + radius_at(z) - 0.05, 0, z) for z in [0.06 + 0.04 * i for i in range(57)]],
+    'liquidLeft': [px(OX - radius_at(z) + 0.05, 0, z) for z in [0.06 + 0.04 * i for i in range(57)]],
+    'levelBottom': px(OX, 0, 0.10)[1], 'levelTop': px(OX, 0, 2.22)[1], 'levelIdleMax': px(OX, 0, TOP)[1],
     'neckTop': px(OX, 0, 2.43)[1], 'neckInner': [px(OX - 0.26, 0, 2.0)[0], px(OX + 0.26, 0, 2.0)[0]],
     'neckZ': px(OX, 0, 1.60)[1],
 }
