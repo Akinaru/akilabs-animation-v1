@@ -12,9 +12,14 @@ Animated studio intro for Aki Labs slot games: a cartoon Erlenmeyer flask drops,
 - `fonts/`: open-licensed display fonts (SIL OFL / Apache, from Google Fonts).
 - `logo-pistes.html`, `logo-v2/`: first vector/CSS explorations (rejected, kept for history).
 
+## Dynamic loader (PixiJS v8)
+- `blender/layers.py` renders the separate layers (`loader/assets/bg.png`, `liquid.png`, `glass.png`, `text.png`) and `geometry.json` (flask silhouette, liquid interior, levels, text box in pixels, 1920×1080 design space).
+- `loader/aki-intro.js`: `AkiIntro.create(app)`, `setProgress(0..1)`, `await finish()`, `destroy()`. The liquid level follows the real loading progress, the liquid sloshes, bubbles rise out of the neck and pop, the wordmark slides out from behind the flask. The intro always plays fully before the outro.
+- `loader/index.html`: demo with fake fast / medium / slow / manual loads. Serve the folder over HTTP (`python3 -m http.server`) and open it.
+
 ## Next steps
-1. Pick the layout.
-2. Seamless idle loop + outro (handover to the game).
+1. Polish the outro handover to each game.
+2. Integrate the loader into the slot template.
 3. Export layers (glass back, liquid, wave loop, glass front, wordmark) for a dynamic loader in PixiJS or Spine, with the liquid level driven by real loading progress and bubbles generated in code.
 
 Competitor research captures are kept locally and are not part of this repository.

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aki Labs loader</title>
+<script src="https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0418; color: #eee; font: 14px system-ui, sans-serif; overflow: hidden; }
+  #ui { position: fixed; left: 16px; right: 16px; bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; z-index: 5; }
+  button { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 7px 14px; cursor: pointer; font: inherit; }
+  #pct { min-width: 120px; opacity: .8; }
+  #game { position: fixed; inset: 0; display: none; place-items: center; background: linear-gradient(160deg,#3b2a80,#1b5f7a); font-size: 26px; }
+</style>
+</head>
+<body>
+<div id="game">Le jeu est chargé</div>
+<div id="ui">
+  <button data-ms="800">Chargement rapide (0,8 s)</button>
+  <button data-ms="4000">Moyen (4 s)</button>
+  <button data-ms="10000">Lent (10 s)</button>
+  <button id="manual">Manuel</button>
+  <input id="slider" type="range" min="0" max="100" value="0" disabled>
+  <button id="done" disabled>Fin du chargement</button>
+  <span id="pct"></span>
+</div>
+<script type="module">
+import { AkiIntro } from './aki-intro.js';
+
+const app = new PIXI.Application();
+await app.init({ resizeTo: window, background: '#0b0418', antialias: true });
+document.body.prepend(app.canvas);
+
+let intro, timer;
+const $ = (s) => document.querySelector(s);
+const show = (p) => ($('#pct').textContent = `chargement : ${Math.round(p * 100)} %`);
+
+async function run(ms) {
+  clearInterval(timer);
+  $('#game').style.display = 'none';
+  if (intro) intro.destroy();
+  intro = await AkiIntro.create(app, { base: './assets/' });
+  $('#slider').disabled = ms !== 'manual'; $('#done').disabled = ms !== 'manual';
+  $('#slider').disabled = ms !== 'manual';
+  if (ms === 'manual') { $('#slider').value = 0; intro.setProgress(0); show(0); return; }
+  // fake asset loader: irregular steps, like a real network
+  let p = 0; const t0 = performance.now();
+  timer = setInterval(async () => {
+    const lin = (performance.now() - t0) / ms;
+    p = Math.min(1, Math.max(p, lin * (0.75 + Math.random() * 0.5)));
+    intro.setProgress(p); show(p);
+    if (lin >= 1) { clearInterval(timer); intro.setProgress(1); show(1); await end(); }
+  }, 120);
+}
+async function end() {
+  await intro.finish();
+  $('#game').style.display = 'grid';
+}
+document.querySelectorAll('[data-ms]').forEach((b) => (b.onclick = () => run(+b.dataset.ms)));
+$('#manual').onclick = () => run('manual');
+$('#slider').oninput = (e) => { const p = e.target.value / 100; intro.setProgress(p); show(p); };
+$('#done').onclick = () => end();
+run(4000);
+</script>
+</body>
+</html>
