@@ -1,0 +1,76 @@
+<!doctype html>
+<!-- The studio ident alone (owner 2026-11-10): the same animation as grumpy-mole StudioSplash.svelte, without the
+     game behind and without waiting for a loading, to judge its fluidity. Replay, slow motion, loop.
+     http://127.0.0.1:3661/aki-labs-brand/loader/ident-final.html -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intro Aki Labs</title>
+<style>
+  @font-face { font-family: 'Aki Archivo Black'; src: url('../fonts/ArchivoBlack-Regular.ttf') format('truetype'); font-display: block; }
+  html, body { margin: 0; height: 100%; background: #050506; overflow: hidden; }
+  #ui { position: fixed; left: 12px; top: 12px; display: flex; gap: 8px; z-index: 5; font: 600 13px system-ui; }
+  #ui button { background: rgba(255,255,255,.06); color: #ccc; border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 6px 12px; cursor: pointer; font: inherit; }
+  #ui button.on { background: #f4f4f6; color: #08080a; }
+  #ui.hide { opacity: 0; transition: opacity .4s; } #ui:hover { opacity: 1; }
+  .splash { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse 70% 60% at 50% 46%, #18181d 0%, #0b0b0e 55%, #050506 100%); transition: opacity calc(.7s * var(--k)) cubic-bezier(.4,0,.2,1) calc(.25s * var(--k)); }
+  .splash.leaving { opacity: 0; }
+  .ident { display: flex; flex-direction: column; align-items: center; transition: transform calc(.9s * var(--k)) cubic-bezier(.4,0,.2,1), filter calc(.9s * var(--k)) cubic-bezier(.4,0,.2,1); }
+  .leaving .ident { transform: scale(.95); filter: blur(8px); }
+  .mark { height: min(26vh, 30vw, 230px); width: auto; overflow: visible; }
+  .seven { fill: none; stroke: #fff; stroke-width: 640; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100 100; stroke-dashoffset: 100; animation: draw calc(.95s * var(--k)) cubic-bezier(.55,0,.25,1) calc(.15s * var(--k)) forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .rest { opacity: 0; animation: rest calc(.7s * var(--k)) cubic-bezier(.2,.8,.2,1) calc(.85s * var(--k)) forwards; }
+  @keyframes rest { from { opacity: 0; filter: blur(14px); } to { opacity: 1; filter: blur(0); } }
+  .word { margin-top: min(4.5vh, 34px); display: flex; font: 400 min(9vh, 11vw, 84px)/.9 'Aki Archivo Black', system-ui, sans-serif; color: #f4f4f6; letter-spacing: -.005em; }
+  .sp { width: .28em; }
+  .ch { display: inline-block; overflow: hidden; padding: .05em .01em; }
+  .ch > span { display: inline-block; transform: translateY(110%); animation: rise calc(1s * var(--k)) cubic-bezier(.2,.8,.2,1) forwards; }
+  @keyframes rise { from { transform: translateY(110%); filter: blur(6px); } to { transform: translateY(0); filter: blur(0); } }
+  .sub { margin-top: .9em; padding-left: .9em; font: 700 min(1.9vh, 2.6vw, 15px) Inter, system-ui, sans-serif; letter-spacing: .9em; text-transform: uppercase; color: #85858e; opacity: 0; animation: track calc(1.3s * var(--k)) cubic-bezier(.2,.8,.2,1) calc(1.6s * var(--k)) forwards; }
+  @keyframes track { from { opacity: 0; letter-spacing: .3em; } to { opacity: 1; letter-spacing: .9em; } }
+  .bar { margin-top: min(3.4vh, 26px); width: min(32vw, 30vh, 240px); height: 1px; background: rgb(255 255 255 / .13); transform: scaleX(0); animation: line calc(.9s * var(--k)) cubic-bezier(.65,0,.35,1) calc(1.8s * var(--k)) forwards; }
+  @keyframes line { to { transform: scaleX(1); } }
+  .fill { width: 100%; height: 100%; background: #f4f4f6; box-shadow: 0 0 8px rgb(255 255 255 / .5); transform-origin: 0 50%; transform: scaleX(0); }
+</style>
+</head>
+<body style="--k:1">
+<div id="ui">
+  <button id="replay">Rejouer</button>
+  <button data-k="1" class="on">Vitesse normale</button>
+  <button data-k="3">Ralenti x3</button>
+  <button id="loop" class="on">En boucle</button>
+  <button id="out">Avec la sortie</button>
+</div>
+<div id="stage"></div>
+<script type="module">
+const svg = await (await fetch('../logo-mark/final/aki-mark.svg')).text();
+const shape = svg.slice(svg.indexOf('<g'), svg.lastIndexOf('</g>') + 4);
+await document.fonts.load("84px 'Aki Archivo Black'");
+let k = 1, loop = true, withOut = true, timers = [];
+function play() {
+  timers.forEach(clearTimeout); timers = [];
+  document.body.style.setProperty('--k', k);
+  const word = [...'AKI LABS'].map((c, i) => c === ' ' ? '<span class="sp"></span>' : `<span class="ch"><span style="animation-delay:${(1100 + i * 60) * k}ms">${c}</span></span>`).join('');
+  document.getElementById('stage').innerHTML = `<div class="splash"><div class="ident">
+    <svg class="mark" viewBox="0 0 2268 2718" fill="#f4f4f6"><defs><mask id="seven" maskUnits="userSpaceOnUse"><path class="seven" d="M 220 420 L 1960 230 L 360 2330" pathLength="100"/></mask></defs>
+    <g mask="url(#seven)">${shape}</g><g class="rest">${shape}</g></svg>
+    <div class="word">${word}</div><div class="sub">Studios</div><div class="bar"><div class="fill"></div></div></div></div>`;
+  // the hairline fills once drawn (a smooth 1.2 s fill stands for the loading)
+  const fill = document.querySelector('.fill');
+  fill.animate([{transform: 'scaleX(0)'}, {transform: 'scaleX(1)'}], {duration: 1200 * k, delay: 2500 * k, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'forwards'});
+  if (withOut) timers.push(setTimeout(() => document.querySelector('.splash').classList.add('leaving'), 3900 * k));
+  if (loop) timers.push(setTimeout(play, (withOut ? 5600 : 5000) * k));
+}
+const sel = (q, b) => document.querySelectorAll(q).forEach((x) => x.classList.toggle('on', x === b));
+document.getElementById('replay').onclick = play;
+document.querySelectorAll('[data-k]').forEach((b) => (b.onclick = () => { k = +b.dataset.k; sel('[data-k]', b); play(); }));
+document.getElementById('loop').onclick = (e) => { loop = !loop; e.target.classList.toggle('on', loop); play(); };
+document.getElementById('out').onclick = (e) => { withOut = !withOut; e.target.classList.toggle('on', withOut); play(); };
+document.getElementById('out').classList.add('on');
+setTimeout(() => document.getElementById('ui').classList.add('hide'), 2500);
+play();
+</script>
+</body>
+</html>
