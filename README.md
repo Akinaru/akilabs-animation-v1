@@ -68,3 +68,8 @@ Syncopate), 3 animations (Révélation: letters rise from a hidden line with a b
 draws; Rouleaux: Bow21-like reel roll in pure white; Lumière: left-to-right reveal and a light sweep over the
 letters), the loading = the hairline, outro = soft recede + blur into the game, 16:9 / 9:16 previews. The
 wordmark fits 80 % of the width whatever the typeface. The chosen typeface will be copied into fonts/.
+- Owner: Révélation, classic typeface (Archivo Black), and the A of LABS = the studio mark in white with a heavy
+  stroke. `flaskA()` in ident-mono.html draws an Erlenmeyer cut like the typeface's own A (cap height and width
+  measured on the font's A, stroke from its I stem): solid neck = apex, flaring body = legs; the white liquid rises
+  inside with the loading and its surface ends as the A's crossbar (the small empty triangle left is the A's
+  counter). To export as the studio logo (SVG) once approved.
