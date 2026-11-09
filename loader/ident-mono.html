@@ -1,0 +1,193 @@
+<!doctype html>
+<!-- Aki Labs studio ident, premium monochrome (owner 2026-11-09: colour looks cheap; a sober white logo, a heavy
+     typeface like the Bow21 reference, a fluid studio-style animation, no colour). Vector text (crisp on every
+     screen), the loading is a hairline under the wordmark, the outro opens on the game.
+     Typefaces from Google Fonts for the trial (all SIL OFL); the chosen one will be copied into fonts/.
+     http://127.0.0.1:3661/aki-labs-brand/loader/ident-mono.html -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intro studio : monochrome</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Unbounded:wght@900&family=Rubik+Mono+One&family=Dela+Gothic+One&family=Big+Shoulders+Display:wght@900&family=Anton&family=Russo+One&family=Syncopate:wght@700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #08080a; --ink: #f4f4f6; --dim: #7d7d86; --ease: cubic-bezier(.2,.8,.2,1); }
+  html, body { margin: 0; height: 100%; background: #000; color: var(--ink); font: 14px Inter, system-ui, sans-serif; overflow: hidden; }
+  #ui { position: fixed; left: 12px; top: 12px; right: 12px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; z-index: 5; }
+  #ui b { color: #9a9aa3; font-size: 11px; letter-spacing: .12em; margin: 0 4px 0 10px; }
+  #ui button { background: rgba(255,255,255,.06); color: #ddd; border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 6px 12px; cursor: pointer; font: 600 13px Inter, system-ui; }
+  #ui button.on { background: #f4f4f6; color: #08080a; border-color: #f4f4f6; }
+  #screen { position: fixed; left: 50%; top: 52%; transform: translate(-50%, -50%); overflow: hidden; background: var(--bg); box-shadow: 0 0 0 1px rgba(255,255,255,.08); container-type: size; }
+  #bg { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 48%, #17171c 0%, #0b0b0e 55%, #050506 100%); }
+  #grain { position: absolute; inset: -50%; opacity: .06; pointer-events: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>"); animation: grain 1s steps(4) infinite; }
+  @keyframes grain { 0% { transform: translate(0,0) } 25% { transform: translate(-3%,2%) } 50% { transform: translate(2%,-3%) } 75% { transform: translate(-2%,-1%) } }
+  #game { position: absolute; inset: 0; background: center / cover no-repeat url('/grumpy-mole/art-source/antic-lab/full.png'); opacity: 0; }
+  #logo { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center; white-space: nowrap; }
+  .word { font-size: 160px; line-height: .9; letter-spacing: -.01em; color: var(--ink); display: inline-flex; gap: .02em; }
+  .word .sp { width: .28em; }
+  .ch { display: inline-block; position: relative; overflow: hidden; vertical-align: top; padding: .04em 0; }
+  .ch > span { display: inline-block; will-change: transform, filter; }
+  .sub { margin-top: .9em; font: 700 clamp(9px, 1.25cqw, 18px) Inter, system-ui; letter-spacing: .9em; padding-left: .9em; color: var(--dim); text-transform: uppercase; }
+  .line { position: relative; margin: 1.6em auto 0; width: clamp(120px, 16cqw, 260px); height: 1px; background: rgba(255,255,255,.12); transform-origin: center; }
+  .line i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--ink); box-shadow: 0 0 8px rgba(255,255,255,.5); }
+  .reel { display: flex !important; flex-direction: column; align-items: center; line-height: 1; }
+  .reel > span { display: block; height: 1em; line-height: 1em; }
+  /* the light sweep: a copy of the wordmark painted with a moving bright band, clipped to the letters */
+  .sheen { position: absolute; left: 0; top: 0; pointer-events: none; color: #fff; text-shadow: 0 0 18px rgba(255,255,255,.55); -webkit-mask-image: linear-gradient(105deg, transparent 38%, #000 50%, transparent 62%); mask-image: linear-gradient(105deg, transparent 38%, #000 50%, transparent 62%); -webkit-mask-size: 300% 100%; mask-size: 300% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: 150% 0; mask-position: 150% 0; }
+  .word.dimmed { color: #cfcfd5; }
+  #note { position: fixed; left: 12px; bottom: 12px; right: 12px; color: #9a9aa3; font-size: 13px; z-index: 5; }
+</style>
+</head>
+<body>
+<div id="ui">
+  <b>TYPO</b><span id="fonts" style="display:contents"></span>
+  <b>ANIMATION</b>
+  <button data-a="reveal" class="on">Révélation</button>
+  <button data-a="reels">Rouleaux</button>
+  <button data-a="sweep">Lumière</button>
+  <b>ÉCRAN</b>
+  <button data-f="full" class="on">Plein</button>
+  <button data-f="desktop">16:9</button>
+  <button data-f="mobile">9:16</button>
+  <b>CHARGEMENT</b>
+  <button data-ms="1500">Rapide</button>
+  <button data-ms="5000" class="on">Moyen</button>
+  <button data-ms="10000">Lent</button>
+  <button id="replay">Rejouer</button>
+</div>
+<div id="screen"><div id="bg"></div><div id="grain"></div><div id="game"></div><div id="logo"></div></div>
+<div id="note"></div>
+<script>
+const FONTS = [
+  ['Archivo Black', "'Archivo Black'", 400],
+  ['Unbounded', "'Unbounded'", 900],
+  ['Rubik Mono', "'Rubik Mono One'", 400],
+  ['Dela Gothic', "'Dela Gothic One'", 400],
+  ['Big Shoulders', "'Big Shoulders Display'", 900],
+  ['Anton', "'Anton'", 400],
+  ['Russo One', "'Russo One'", 400],
+  ['Syncopate', "'Syncopate'", 700],
+];
+const NOTES = {
+  reveal: 'Révélation : chaque lettre monte de sous une ligne invisible, l’une après l’autre, puis « STUDIOS » s’écarte doucement et la ligne de chargement se trace. Sortie : le logo recule légèrement, se floute et s’efface.',
+  reels: 'Rouleaux : comme Bow21, les lettres défilent comme des rouleaux (flou de vitesse) et se bloquent de gauche à droite, en blanc pur. Sortie : elles repartent vers le haut.',
+  sweep: 'Lumière : le logo se dévoile de gauche à droite, un reflet de lumière passe sur les lettres pendant le chargement. Sortie : un dernier reflet, puis fondu.',
+};
+const POOL = 'AKILBS0123456789';
+let font = 0, anim = 'reveal', frame = 'full', loadMs = 5000, run = 0;
+const $ = (s) => document.querySelector(s);
+const screen = $('#screen'), logo = $('#logo'), game = $('#game');
+
+// font buttons
+FONTS.forEach(([label], i) => { const b = document.createElement('button'); b.textContent = label; b.dataset.font = i; if (!i) b.classList.add('on'); b.onclick = () => { font = i; sel('[data-font]', b); start(); }; $('#fonts').appendChild(b); });
+const sel = (q, b) => document.querySelectorAll(q).forEach((x) => x.classList.toggle('on', x === b));
+
+function build() {
+  const [, fam, wt] = FONTS[font];
+  logo.innerHTML = '';
+  const w = document.createElement('div'); w.className = 'word'; w.style.fontFamily = fam; w.style.fontWeight = wt;
+  const letters = [];
+  for (const c of 'AKI LABS') {
+    if (c === ' ') { const s = document.createElement('span'); s.className = 'sp'; w.appendChild(s); continue; }
+    const box = document.createElement('span'); box.className = 'ch';
+    const inner = document.createElement('span');
+    if (anim === 'reels') {
+      // a vertical strip: random letters then the true one at the bottom
+      inner.className = 'reel';
+      const n = 7 + letters.length * 2;
+      for (let k = 0; k < n; k++) { const r = document.createElement('span'); r.textContent = POOL[(k * 5 + letters.length * 3) % POOL.length]; inner.appendChild(r); }
+      const last = document.createElement('span'); last.textContent = c; inner.appendChild(last);
+      box.style.height = '1em'; box.style.lineHeight = '1'; inner.dataset.n = n; inner.dataset.ch = c;
+    } else inner.textContent = c;
+    box.appendChild(inner); w.appendChild(box); letters.push(inner);
+  }
+  const wrap = document.createElement('div'); wrap.style.position = 'relative'; wrap.style.display = 'inline-block'; wrap.appendChild(w);
+  const sheen = w.cloneNode(true); sheen.classList.add('sheen'); if (anim === 'sweep') { wrap.appendChild(sheen); w.classList.add('dimmed'); }
+  const sub = document.createElement('div'); sub.className = 'sub'; sub.textContent = 'Studios';
+  const line = document.createElement('div'); line.className = 'line'; const fill = document.createElement('i'); line.appendChild(fill);
+  logo.append(wrap, sub, line);
+  // fit: the wordmark never takes more than 80 % of the width (wide typefaces) nor 200 px of cap height
+  const sw = screen.clientWidth;
+  let size = Math.min(200, sw * 0.13);
+  w.style.fontSize = size + 'px'; sheen.style.fontSize = size + 'px';
+  const ww = w.getBoundingClientRect().width;
+  if (ww > sw * 0.8) { size *= (sw * 0.8) / ww; w.style.fontSize = sheen.style.fontSize = size + 'px'; }
+  // reels: each box is exactly as wide as its final letter
+  if (anim === 'reels') for (const s of letters) { const m = document.createElement('span'); m.textContent = s.dataset.ch; m.style.visibility = 'hidden'; m.style.position = 'absolute'; w.appendChild(m); s.parentElement.style.width = m.getBoundingClientRect().width + 'px'; m.remove(); }
+  return {w, wrap, letters, sub, line, fill, sheen};
+}
+
+const E = 'cubic-bezier(.2,.8,.2,1)', EIO = 'cubic-bezier(.65,0,.35,1)';
+async function start() {
+  const id = ++run;
+  $('#note').textContent = NOTES[anim];
+  document.getElementById('grain').style.display = '';
+  game.getAnimations().forEach((a) => a.cancel()); game.style.opacity = 0;
+  await document.fonts.load(`${FONTS[font][2]} 100px ${FONTS[font][1]}`);
+  const L = build();
+  logo.style.opacity = 1; logo.style.filter = 'none';
+  const fx = [];
+  const A = (el, kf, opt) => { const a = el.animate(kf, {fill: 'both', easing: E, ...opt}); fx.push(a); return a; };
+  let introMs = 0;
+  if (anim === 'reveal') {
+    L.letters.forEach((s, i) => A(s, [{transform: 'translateY(110%)', filter: 'blur(6px)'}, {transform: 'translateY(0)', filter: 'blur(0)'}], {duration: 1000, delay: 150 + i * 70}));
+    A(L.sub, [{opacity: 0, letterSpacing: '.3em', transform: 'translateY(6px)'}, {opacity: 1, letterSpacing: '.9em', transform: 'none'}], {duration: 1400, delay: 900});
+    A(L.line, [{transform: 'scaleX(0)', opacity: 0}, {transform: 'scaleX(1)', opacity: 1}], {duration: 900, delay: 1200, easing: EIO});
+    introMs = 2200;
+  } else if (anim === 'reels') {
+    L.letters.forEach((s, i) => {
+      const n = +s.dataset.n, dur = 700 + i * 120;
+      A(s, [{transform: 'translateY(0)', filter: 'blur(0)'}, {transform: `translateY(${-n * 0.35 / (n + 1) * 100}%)`, filter: 'blur(5px)', offset: 0.25}, {transform: `translateY(${-(n - 0.15) / (n + 1) * 100}%)`, filter: 'blur(1px)', offset: 0.85}, {transform: `translateY(${-n / (n + 1) * 100}%)`, filter: 'blur(0)'}], {duration: dur, delay: 100, easing: 'cubic-bezier(.3,0,.2,1)'});
+    });
+    A(L.sub, [{opacity: 0}, {opacity: 1}], {duration: 700, delay: 1500});
+    A(L.line, [{transform: 'scaleX(0)'}, {transform: 'scaleX(1)'}], {duration: 800, delay: 1600, easing: EIO});
+    introMs = 2300;
+  } else {
+    A(L.w, [{clipPath: 'inset(0 100% 0 0)'}, {clipPath: 'inset(0 0% 0 0)'}], {duration: 1300, delay: 200, easing: EIO});
+    A(L.sheen, [{maskPosition: '150% 0', webkitMaskPosition: '150% 0'}, {maskPosition: '-50% 0', webkitMaskPosition: '-50% 0'}], {duration: 1300, delay: 200, easing: EIO, fill: 'none'});
+    A(L.sub, [{opacity: 0, transform: 'translateY(6px)'}, {opacity: 1, transform: 'none'}], {duration: 900, delay: 1100});
+    A(L.line, [{opacity: 0}, {opacity: 1}], {duration: 600, delay: 1300});
+    introMs = 2000;
+    setTimeout(function loop() { if (run !== id) return; L.sheen.animate([{maskPosition: '150% 0', webkitMaskPosition: '150% 0'}, {maskPosition: '-50% 0', webkitMaskPosition: '-50% 0'}], {duration: 1600, easing: EIO}); setTimeout(loop, 3200); }, 2600);
+  }
+  // loading (fake network; the game would drive it)
+  const t0 = performance.now(); let p = 0;
+  await new Promise((done) => {
+    (function tick() {
+      if (run !== id) return;
+      const t = performance.now() - t0, lin = Math.min(1, t / loadMs);
+      p = Math.max(p, Math.min(lin, lin * (0.8 + Math.random() * 0.3))); if (lin >= 1) p = 1;
+      L.fill.style.width = (p * 100).toFixed(2) + '%';
+      if (p >= 1 && t >= introMs + 300) done(); else requestAnimationFrame(tick);
+    })();
+  });
+  if (run !== id) return;
+  // outro
+  await new Promise((r) => setTimeout(r, 250));
+  if (anim === 'reels') L.letters.forEach((s, i) => s.animate([{}, {transform: `translateY(${-(+s.dataset.n + 2) / (+s.dataset.n + 1) * 100}%)`, filter: 'blur(4px)'}], {duration: 420, delay: i * 35, easing: 'cubic-bezier(.5,0,.8,.2)', fill: 'forwards'}));
+  if (anim === 'sweep') L.sheen.animate([{maskPosition: '150% 0', webkitMaskPosition: '150% 0'}, {maskPosition: '-50% 0', webkitMaskPosition: '-50% 0'}], {duration: 700, easing: EIO});
+  await logo.animate([{opacity: 1, transform: 'translate(-50%,-50%) scale(1)', filter: 'blur(0)'}, {opacity: 0, transform: 'translate(-50%,-50%) scale(.96)', filter: 'blur(8px)'}], {duration: 650, delay: anim === 'reels' ? 250 : 200, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards'}).finished;
+  if (run !== id) return;
+  document.getElementById('grain').style.display = 'none';
+  await game.animate([{opacity: 0}, {opacity: 1}], {duration: 600, fill: 'forwards'}).finished;
+  setTimeout(() => run === id && start(), 2500);
+}
+
+function setFrame(f) {
+  frame = f;
+  const r = {full: 0, desktop: 16 / 9, mobile: 9 / 16}[f];
+  if (!r) { screen.style.width = '100vw'; screen.style.height = '100vh'; screen.style.top = '50%'; }
+  else { const vw = innerWidth * 0.94, vh = innerHeight * 0.8; const w = Math.min(vw, vh * r); screen.style.width = w + 'px'; screen.style.height = w / r + 'px'; screen.style.top = '52%'; }
+}
+document.querySelectorAll('[data-a]').forEach((b) => (b.onclick = () => { anim = b.dataset.a; sel('[data-a]', b); start(); }));
+document.querySelectorAll('[data-f]').forEach((b) => (b.onclick = () => { sel('[data-f]', b); setFrame(b.dataset.f); start(); }));
+document.querySelectorAll('[data-ms]').forEach((b) => (b.onclick = () => { loadMs = +b.dataset.ms; sel('[data-ms]', b); start(); }));
+$('#replay').onclick = start;
+addEventListener('resize', () => setFrame(frame));
+window.labSet = (a, f, fr) => { anim = a; font = f; setFrame(fr || 'full'); start(); };
+setFrame('full'); start();
+</script>
+</body>
+</html>

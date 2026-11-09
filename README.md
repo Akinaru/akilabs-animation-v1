@@ -59,3 +59,12 @@ Owner picked the neon idea, rendered in 3D in Blender, very clean, adapted to mo
   Previews: full screen / desktop 16:9 / mobile 9:16 buttons.
 - No green screen: the neon glow is semi-transparent and keys badly; additive light layers over the rendered wall
   give the exact 3D render on any format.
+
+## Monochrome studio ident (2026-11-09)
+Owner: the neon looks cheap; premium = a sober WHITE logo, a heavy typeface like the Bow21 reference, a fluid
+studio animation, no colour. `loader/ident-mono.html` (vector text, crisp everywhere): 8 heavy OFL typefaces to
+compare (Archivo Black, Unbounded, Rubik Mono One, Dela Gothic One, Big Shoulders Display, Anton, Russo One,
+Syncopate), 3 animations (Révélation: letters rise from a hidden line with a blur, STUDIOS tracks out, a hairline
+draws; Rouleaux: Bow21-like reel roll in pure white; Lumière: left-to-right reveal and a light sweep over the
+letters), the loading = the hairline, outro = soft recede + blur into the game, 16:9 / 9:16 previews. The
+wordmark fits 80 % of the width whatever the typeface. The chosen typeface will be copied into fonts/.
