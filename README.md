@@ -26,3 +26,12 @@ Animated studio intro for Aki Labs slot games: a cartoon Erlenmeyer flask drops,
 `ui/`: the studio UI material (tokens) and standard components, starting with the bonus-buy menu (`ui/buy-menu/`).
 
 Competitor research captures are kept locally and are not part of this repository.
+
+## Loader proposals (2026-11-09)
+Owner: the flask intro looks cheap; wants a premium loading screen like the best Stake Engine games (dimmed blurred
+game scene, light cone, floating game items, big game logo, crafted gauge with milestones, "touch to play", studio
+signature). `loader/proposals.html`, served from the Slots folder
+(`python3 -m http.server 3661 --bind 127.0.0.1` in `Slots/`, then
+`http://127.0.0.1:3661/aki-labs-brand/loader/proposals.html`): A = studio glass-tube gauge (Aki violet liquid,
+bubbles, crystal milestones), B = the game's mine rail with the gold cart, C = premium studio ident (flask fills in
+the dark, glow, wordmark reveal, light sweep, violet wave) then A. Uses the game's own art in place (no copies).

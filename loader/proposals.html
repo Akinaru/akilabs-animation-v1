@@ -1,0 +1,335 @@
+<!doctype html>
+<!-- Loader proposals (owner 2026-11-09: the flask intro "fait cheap", wants a premium loading screen like the best
+     Stake Engine games: dimmed blurred game scene, light cone, floating game items, big logo, a crafted progress
+     gauge with milestones, "touch to play", studio signature at the bottom).
+     Served from the Slots folder (http://127.0.0.1:3661/aki-labs-brand/loader/proposals.html) so it reads the game's
+     own art (grumpy-mole/...) and the studio's (aki-labs-brand/loader/assets) without copies.
+     A = studio glass tube gauge, B = the game's mine rail, C = studio ident first, then A. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loader : propositions</title>
+<script src="https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; background: #07030f; color: #eee; font: 14px system-ui, sans-serif; overflow: hidden; }
+  #ui { position: fixed; left: 12px; top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; z-index: 5; }
+  #ui button { background: rgba(20,10,40,.75); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 7px 14px; cursor: pointer; font: 600 14px system-ui; }
+  #ui button.on { background: #ffb43a; color: #1d1622; border-color: #ffb43a; }
+  #note { position: fixed; left: 12px; top: 52px; max-width: 760px; color: #ffe3a8; z-index: 5; text-shadow: 0 1px 3px #000; font-size: 15px; }
+</style>
+</head>
+<body>
+<div id="ui">
+  <button data-v="A" class="on">A. Tube du studio</button>
+  <button data-v="B">B. Rail de la mine</button>
+  <button data-v="C">C. Logo studio puis jeu</button>
+  <span style="opacity:.6">|</span>
+  <button data-ms="2500">Chargement rapide</button>
+  <button data-ms="6000" class="on">Moyen</button>
+  <button data-ms="12000">Lent</button>
+</div>
+<div id="note"></div>
+<script type="module">
+const ROOT = '/';
+const G = ROOT + 'grumpy-mole/';
+const BR = ROOT + 'aki-labs-brand/';
+const W = 1920, H = 1080;
+const NOTES = {
+  A: "A. L'écran du jeu (décor flou, cône de lumière, objets du jeu qui flottent, gros logo) et la jauge SIGNATURE du studio : un tube en verre où monte le liquide violet d'Aki Labs, avec des bulles, et les cristaux x2 / x5 / x25 / x100 qui s'allument au passage. Signature « UN JEU AKI LABS » en bas.",
+  B: "B. Le même écran, mais la jauge est dans le thème du jeu : le rail de la mine, le wagonnet d'or avance avec le chargement, les lanternes s'allument au passage.",
+  C: "C. D'abord le logo du studio en version premium (flacon dans le noir, reflet de lumière, lueur), le liquide violet remplit l'écran comme une vague, puis on arrive sur l'écran A.",
+};
+
+await new FontFace('Lilita', `url(${BR}fonts/LilitaOne-Regular.ttf)`).load().then((f) => document.fonts.add(f));
+const app = new PIXI.Application();
+await app.init({resizeTo: window, background: '#07030f', antialias: true, resolution: Math.min(2, devicePixelRatio || 1), autoDensity: true});
+document.body.prepend(app.canvas);
+
+const T = await PIXI.Assets.load([
+  {alias: 'plate', src: G + 'public/art/scenes/base-landscape.webp'},
+  {alias: 'logo', src: G + 'art-source/backups/loading-screen-20261109/loading/logo.webp'},
+  {alias: 'rail0', src: G + 'art-source/backups/loading-screen-20261109/loading/rail-empty.webp'},
+  {alias: 'rail1', src: G + 'art-source/backups/loading-screen-20261109/loading/rail-full.webp'},
+  {alias: 'cart', src: G + 'art-source/backups/loading-screen-20261109/loading/cart.webp'},
+  ...['h1_diamond', 'h2_ruby', 'h3_emerald', 'h4_sapphire', 'dynamite', 'x_lantern', 'x_minecart', 'x_pickaxe', 'crystal_x2', 'crystal_x5', 'crystal_x25'].map((n) => ({alias: n, src: G + 'art-source/da-paperclip/build/symbols/' + n + '.png'})),
+  ...['bg', 'glass', 'liquid', 'text'].map((n) => ({alias: 'aki-' + n, src: BR + 'loader/assets/' + n + '.png'})),
+]);
+
+// ---------- helpers ----------
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ease = (u) => { u = clamp(u); return u * u * (3 - 2 * u); };
+const backOut = (u, s = 1.7) => { u = clamp(u); return 1 + (s + 1) * (u - 1) ** 3 + s * (u - 1) ** 2; };
+const rand = (a, b) => a + Math.random() * (b - a);
+function canvasTex(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); return PIXI.Texture.from(c); }
+const text = (s, size, fill = '#ffd45a') => new PIXI.Text({text: s, style: {fontFamily: 'Lilita', fontSize: size, fill, stroke: {color: '#2a1840', width: size * 0.16, join: 'round'}, dropShadow: {color: '#000', alpha: 0.6, blur: 6, distance: 3, angle: Math.PI / 2}, letterSpacing: size * 0.04}});
+
+// ---------- the game loading scene (shared by A, B, C) ----------
+function gameScene(gauge) {
+  const root = new PIXI.Container();
+  // blurred, dimmed plate (slow parallax drift)
+  const plate = new PIXI.Sprite(T.plate);
+  plate.anchor.set(0.5); plate.position.set(W / 2, H / 2);
+  const ps = Math.max(W / plate.texture.width, H / plate.texture.height) * 1.08; plate.scale.set(ps);
+  const cm = new PIXI.ColorMatrixFilter(); cm.brightness(0.42, false); cm.saturate(-0.15, true);
+  plate.filters = [new PIXI.BlurFilter({strength: 7, quality: 4}), cm];
+  root.addChild(plate);
+  // light cone from above + vignette
+  const cone = new PIXI.Sprite(canvasTex(1200, 1080, (g, w, h) => {
+    const lg = g.createLinearGradient(0, 0, 0, h); lg.addColorStop(0, 'rgba(255,214,140,0.55)'); lg.addColorStop(1, 'rgba(255,190,110,0)');
+    g.fillStyle = lg; g.beginPath(); g.moveTo(w * 0.36, 0); g.lineTo(w * 0.64, 0); g.lineTo(w, h); g.lineTo(0, h); g.closePath(); g.fill();
+    g.globalCompositeOperation = 'destination-in';
+    const sg = g.createLinearGradient(0, 0, w, 0); sg.addColorStop(0, 'rgba(0,0,0,0)'); sg.addColorStop(0.3, 'rgba(0,0,0,1)'); sg.addColorStop(0.7, 'rgba(0,0,0,1)'); sg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = sg; g.fillRect(0, 0, w, h);
+  }));
+  cone.anchor.set(0.5, 0); cone.position.set(W / 2, -40); cone.blendMode = 'add'; cone.alpha = 0.55;
+  cone.filters = [new PIXI.BlurFilter({strength: 30, quality: 4})];
+  root.addChild(cone);
+  const vig = new PIXI.Sprite(canvasTex(512, 288, (g, w, h) => {
+    const r = g.createRadialGradient(w / 2, h * 0.45, h * 0.25, w / 2, h / 2, w * 0.62);
+    r.addColorStop(0, 'rgba(5,2,12,0)'); r.addColorStop(1, 'rgba(5,2,12,0.92)'); g.fillStyle = r; g.fillRect(0, 0, w, h);
+  }));
+  vig.width = W; vig.height = H;
+  // floating game items at three depths (far: small + blurred, near: big + very blurred), on the sides
+  const ITEMS = ['h1_diamond', 'h2_ruby', 'h3_emerald', 'h4_sapphire', 'dynamite', 'x_lantern', 'x_minecart', 'x_pickaxe', 'crystal_x2', 'crystal_x5', 'crystal_x25'];
+  const floaters = [];
+  const layers = [0, 1, 2].map((d) => { const c = new PIXI.Container(); if (d !== 1) c.filters = [new PIXI.BlurFilter({strength: d === 0 ? 3 : 9, quality: 3})]; if (d === 0) c.alpha = 0.55; return c; });
+  root.addChild(layers[0], layers[1]);
+  for (let i = 0; i < 14; i++) {
+    const d = i < 5 ? 0 : i < 11 ? 1 : 2;
+    const s = new PIXI.Sprite(T[ITEMS[i % ITEMS.length]]);
+    s.anchor.set(0.5);
+    const size = [70, 115, 190][d] * rand(0.85, 1.15);
+    s.scale.set(size / Math.max(s.texture.width, s.texture.height));
+    const side = i % 2 ? 1 : -1;
+    const f = {s, d, x: W / 2 + side * rand(W * 0.27, W * 0.5), y: rand(0, H), vx: rand(-6, 6), vy: -[10, 18, 30][d] * rand(0.7, 1.3), rot: rand(-0.4, 0.4), vr: rand(-0.15, 0.15), ph: rand(0, 6.28)};
+    floaters.push(f);
+    layers[d].addChild(s);
+  }
+  // dust in the light
+  const dot = canvasTex(32, 32, (g) => { const r = g.createRadialGradient(16, 16, 0, 16, 16, 16); r.addColorStop(0, 'rgba(255,230,180,1)'); r.addColorStop(1, 'rgba(255,230,180,0)'); g.fillStyle = r; g.fillRect(0, 0, 32, 32); });
+  const dust = [];
+  const dustC = new PIXI.Container(); root.addChild(dustC);
+  for (let i = 0; i < 40; i++) { const s = new PIXI.Sprite(dot); s.anchor.set(0.5); s.blendMode = 'add'; s.scale.set(rand(0.08, 0.22)); dustC.addChild(s); dust.push({s, x: W / 2 + rand(-380, 380), y: rand(0, H), v: rand(6, 20), ph: rand(0, 6)}); }
+  // logo: drops in, then floats; a light sweep crosses it now and then
+  const logoC = new PIXI.Container(); logoC.position.set(W / 2, 420); root.addChild(logoC);
+  const logo = new PIXI.Sprite(T.logo); logo.anchor.set(0.5); logo.scale.set(520 / logo.texture.height); logoC.addChild(logo);
+  const shineMask = new PIXI.Sprite(T.logo); shineMask.anchor.set(0.5); shineMask.scale.copyFrom(logo.scale);
+  const band = new PIXI.Sprite(canvasTex(256, 8, (g, w) => { const lg = g.createLinearGradient(0, 0, w, 0); lg.addColorStop(0, 'rgba(255,255,255,0)'); lg.addColorStop(0.5, 'rgba(255,250,225,0.85)'); lg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = lg; g.fillRect(0, 0, w, 8); }));
+  band.anchor.set(0.5); band.rotation = -0.45; band.width = 160; band.height = 900; band.blendMode = 'add';
+  const shine = new PIXI.Container(); shine.addChild(band, shineMask); shine.mask = shineMask; logoC.addChild(shine);
+  root.addChild(layers[2]);
+  root.addChild(vig);
+  // gauge + labels + signature
+  root.addChild(gauge.view);
+  const label = text('CHARGEMENT', 34, '#f3e6c8'); label.anchor.set(0.5); label.position.set(W / 2, 905); root.addChild(label);
+  const play = text('TOUCHE POUR JOUER', 58); play.anchor.set(0.5); play.position.set(W / 2, 905); play.alpha = 0; root.addChild(play);
+  const sig = new PIXI.Container(); sig.position.set(W / 2, 1022); root.addChild(sig);
+  const by = text('UN JEU', 22, '#cfc3e6'); by.anchor.set(1, 0.5); by.position.set(-14, 2); sig.addChild(by);
+  const aki = new PIXI.Sprite(new PIXI.Texture({source: T['aki-text'].source, frame: new PIXI.Rectangle(893, 405, 501, 379)}));
+  aki.anchor.set(0, 0.5); aki.scale.set(54 / 379); aki.position.set(0, 0); sig.addChild(aki);
+  const flask = new PIXI.Sprite(new PIXI.Texture({source: T['aki-glass'].source, frame: new PIXI.Rectangle(317, 265, 527, 574)}));
+  flask.anchor.set(1, 0.5); flask.scale.set(52 / 574); flask.position.set(-by.width - 24, 0); sig.addChild(flask);
+
+  let t = 0, done = false, doneAt = 0, nextShine = 1800, shineAt = -1;
+  return {
+    view: root,
+    progress: 0,
+    tick(dt) {
+      t += dt;
+      plate.x = W / 2 + Math.sin(t / 5200) * 14; plate.y = H / 2 + Math.cos(t / 6100) * 8;
+      cone.alpha = 0.5 + 0.06 * Math.sin(t / 900) + 0.03 * Math.sin(t / 133);
+      for (const f of floaters) {
+        f.x += (f.vx * dt) / 1000; f.y += (f.vy * dt) / 1000; f.rot += (f.vr * dt) / 1000;
+        if (f.y < -150) { f.y = H + 150; f.x = W / 2 + (f.x > W / 2 ? 1 : -1) * rand(W * 0.27, W * 0.5); }
+        f.s.position.set(f.x + Math.sin(t / 1300 + f.ph) * 10, f.y); f.s.rotation = f.rot + Math.sin(t / 1700 + f.ph) * 0.08;
+      }
+      for (const p of dust) { p.y -= (p.v * dt) / 1000; if (p.y < 0) p.y = H; p.s.position.set(p.x + Math.sin(t / 1500 + p.ph) * 20, p.y); p.s.alpha = 0.35 + 0.35 * Math.sin(t / 700 + p.ph); }
+      // logo entrance (0.7 s drop with overshoot), then float
+      const ent = backOut(t / 700);
+      logoC.scale.set(0.7 + 0.3 * ent); logoC.alpha = clamp(t / 250);
+      logoC.y = 420 - (1 - ent) * 60 + Math.sin(t / 1100) * 6;
+      if (shineAt < 0 && t > nextShine) shineAt = t;
+      if (shineAt >= 0) { const u = (t - shineAt) / 900; band.x = -420 + 840 * ease(u); band.visible = u < 1; if (u >= 1) { shineAt = -1; nextShine = t + 3800; } } else band.visible = false;
+      gauge.tick(dt, this.progress, t);
+      if (this.progress >= 1 && !done) { done = true; doneAt = t; label.text = 'CHARGEMENT 100 %'; }
+      if (done) {
+        const u = clamp((t - doneAt) / 400);
+        label.alpha = 1 - u;
+        play.alpha = ease(u);
+        play.scale.set(1 + 0.05 * Math.sin((t - doneAt) / 230));
+      } else label.text = `CHARGEMENT ${Math.round(this.progress * 100)} %`;
+    },
+  };
+}
+
+// ---------- gauge A: the studio's glass tube with the Aki violet liquid ----------
+function tubeGauge() {
+  const view = new PIXI.Container(); view.position.set(W / 2, 800);
+  const L = 820, R = 34; // tube length, radius
+  const back = new PIXI.Graphics().roundRect(-L / 2, -R, L, 2 * R, R).fill({color: 0x170a2c, alpha: 0.85});
+  const liquid = new PIXI.Graphics();
+  const bubbles = new PIXI.Graphics();
+  const glassFront = new PIXI.Sprite(canvasTex(L + 40, 2 * R + 40, (g, w, h) => {
+    const x = 20, y = 20, ww = L, hh = 2 * R;
+    g.lineJoin = 'round';
+    g.beginPath(); g.roundRect(x, y, ww, hh, R); g.lineWidth = 9; g.strokeStyle = '#2a1840'; g.stroke();
+    g.beginPath(); g.roundRect(x + 3, y + 3, ww - 6, hh - 6, R - 3); g.lineWidth = 3; g.strokeStyle = 'rgba(220,200,255,0.55)'; g.stroke();
+    const hl = g.createLinearGradient(0, y, 0, y + hh); hl.addColorStop(0, 'rgba(255,255,255,0.55)'); hl.addColorStop(0.3, 'rgba(255,255,255,0.08)'); hl.addColorStop(0.7, 'rgba(255,255,255,0)'); hl.addColorStop(1, 'rgba(255,255,255,0.12)');
+    g.fillStyle = hl; g.beginPath(); g.roundRect(x + 8, y + 7, ww - 16, hh * 0.32, hh * 0.16); g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.7)'; g.beginPath(); g.roundRect(x + 30, y + 11, 120, 6, 3); g.fill();
+  }));
+  glassFront.anchor.set(0.5);
+  // brass caps
+  const cap = (sx) => { const c = new PIXI.Graphics(); c.roundRect(-22, -R - 10, 44, 2 * R + 20, 12).fill(0xd99a2b).stroke({color: 0x2a1840, width: 7}); c.roundRect(-14, -R - 2, 8, 2 * R + 4, 4).fill({color: 0xffe28a, alpha: 0.8}); c.x = sx; return c; };
+  const marks = [0.25, 0.5, 0.75, 1].map((p, i) => {
+    const s = new PIXI.Sprite(T[['crystal_x2', 'crystal_x5', 'crystal_x25', 'crystal_x25'][i]]);
+    s.anchor.set(0.5, 1); s.scale.set(74 / s.texture.height); s.position.set(-L / 2 + L * p - (p === 1 ? 40 : 0), -R - 8);
+    const lab = text(['x2', 'x5', 'x25', 'x100'][i], 22, '#fff2c8'); lab.anchor.set(0.5); lab.position.set(0, -s.texture.height * 0.18 / (74 / s.texture.height) * 0); s.addChild(lab); lab.scale.set(1 / s.scale.x); lab.y = -s.texture.height * 0.16;
+    return {s, p, lit: 0};
+  });
+  view.addChild(back, liquid, bubbles, glassFront, cap(-L / 2 - 6), cap(L / 2 + 6), ...marks.map((m) => m.s));
+  const bub = [];
+  let shown = 0;
+  return {
+    view,
+    tick(dt, p, t) {
+      shown += (p - shown) * Math.min(1, dt / 220);
+      const x1 = -L / 2 + 8 + (L - 16) * shown;
+      liquid.clear();
+      if (shown > 0.003) {
+        // body + a wavy front edge (meniscus) that sloshes
+        liquid.moveTo(-L / 2 + 8, -R + 8);
+        const top = -R + 8, bot = R - 8;
+        for (let y = top; y <= bot; y += 4) { const w = Math.sin(t / 160 + y / 9) * 5 * (1 - Math.abs(y) / R); liquid.lineTo(x1 + w, y); }
+        liquid.lineTo(-L / 2 + 8, bot).closePath().fill({color: 0x8a4dff});
+        liquid.rect(-L / 2 + 8, -R + 8, Math.max(0, x1 + L / 2 - 8), 10).fill({color: 0xc8a2ff, alpha: 0.55});
+        liquid.rect(-L / 2 + 8, R - 22, Math.max(0, x1 + L / 2 - 8), 14).fill({color: 0x4b1aa8, alpha: 0.5});
+      }
+      if (Math.random() < dt / 90 && shown > 0.04) bub.push({x: rand(-L / 2 + 20, x1 - 12), y: R - 10, r: rand(2, 5), v: rand(25, 60)});
+      bubbles.clear();
+      for (let i = bub.length - 1; i >= 0; i--) { const b = bub[i]; b.y -= (b.v * dt) / 1000; if (b.y < -R + 12 || b.x > x1) { bub.splice(i, 1); continue; } bubbles.circle(b.x + Math.sin(t / 200 + b.y) * 2, b.y, b.r).stroke({color: 0xe6d6ff, width: 1.5, alpha: 0.8}); }
+      for (const m of marks) {
+        const on = shown >= m.p - 0.01;
+        m.lit += ((on ? 1 : 0) - m.lit) * Math.min(1, dt / 120);
+        m.s.tint = on ? 0xffffff : 0x5a4a78;
+        m.s.scale.set((74 / m.s.texture.height) * (1 + 0.25 * Math.sin(Math.PI * clamp(m.lit * 1.2)) * (m.lit < 0.98 ? 1 : 0)));
+      }
+    },
+  };
+}
+
+// ---------- gauge B: the game's mine rail, the gold cart rides along ----------
+function railGauge() {
+  const view = new PIXI.Container(); view.position.set(W / 2, 800);
+  const RW = 980;
+  const r0 = new PIXI.Sprite(T.rail0); r0.anchor.set(0.5); r0.scale.set(RW / r0.texture.width);
+  const r1 = new PIXI.Sprite(T.rail1); r1.anchor.set(0.5); r1.scale.copyFrom(r0.scale);
+  const m = new PIXI.Graphics(); r1.mask = m;
+  const cart = new PIXI.Sprite(T.cart); cart.anchor.set(0.5, 0.9); cart.scale.set(130 / cart.texture.height);
+  const lamps = [0.25, 0.5, 0.75, 1].map((p) => { const s = new PIXI.Sprite(T.x_lantern); s.anchor.set(0.5, 1); s.scale.set(70 / s.texture.height); s.position.set(-RW / 2 + 40 + (RW - 80) * p - (p === 1 ? 30 : 0), -40); return {s, p}; });
+  const glow = new PIXI.Sprite(canvasTex(64, 64, (g) => { const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,200,90,0.9)'); r.addColorStop(1, 'rgba(255,170,60,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); }));
+  view.addChild(r0, r1, m, ...lamps.map((l) => l.s), cart);
+  const sparks = new PIXI.Graphics(); view.addChild(sparks);
+  const sp = [];
+  let shown = 0;
+  return {
+    view,
+    tick(dt, p, t) {
+      shown += (p - shown) * Math.min(1, dt / 260);
+      const x = -RW / 2 + 40 + (RW - 80) * shown;
+      m.clear().rect(-RW / 2, -60, x + RW / 2, 120).fill(0xffffff);
+      cart.position.set(x, -6 + Math.abs(Math.sin(t / 70)) * -2 * (p - shown > 0.002 ? 1 : 0));
+      if (p - shown > 0.003 && Math.random() < dt / 40) sp.push({x: x - 50, y: 10, vx: rand(-160, -60), vy: rand(-140, -40), life: 1});
+      sparks.clear();
+      for (let i = sp.length - 1; i >= 0; i--) { const s = sp[i]; s.life -= dt / 500; if (s.life <= 0) { sp.splice(i, 1); continue; } s.x += (s.vx * dt) / 1000; s.y += (s.vy * dt) / 1000; s.vy += (500 * dt) / 1000; sparks.circle(s.x, s.y, 2.5 * s.life).fill({color: 0xffd36a, alpha: s.life}); }
+      for (const l of lamps) l.s.tint = shown >= l.p - 0.01 ? 0xffffff : 0x4a3e60;
+    },
+  };
+}
+
+// ---------- C: premium studio ident, then a violet liquid wave reveals the game scene ----------
+function studioIdent() {
+  const root = new PIXI.Container();
+  const bg = new PIXI.Sprite(T['aki-bg']); bg.width = W; bg.height = H; const cm = new PIXI.ColorMatrixFilter(); cm.brightness(0.35, false); bg.filters = [cm];
+  const glow = new PIXI.Sprite(canvasTex(256, 256, (g) => { const r = g.createRadialGradient(128, 128, 0, 128, 128, 128); r.addColorStop(0, 'rgba(170,110,255,0.75)'); r.addColorStop(1, 'rgba(120,60,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 256, 256); }));
+  glow.anchor.set(0.5); glow.position.set(580, 560); glow.scale.set(5); glow.blendMode = 'add';
+  const liquid = new PIXI.Sprite(T['aki-liquid']); const glass = new PIXI.Sprite(T['aki-glass']); const word = new PIXI.Sprite(T['aki-text']);
+  const fl = new PIXI.Container(); fl.addChild(liquid, glass); fl.pivot.set(580, 817); fl.position.set(580 + 140, 817);
+  const lm = new PIXI.Graphics(); liquid.mask = lm; fl.addChild(lm);
+  word.x = 140;
+  const wm = new PIXI.Graphics(); word.mask = wm;
+  const sweepMask = new PIXI.Sprite(T['aki-text']); sweepMask.x = 140;
+  const band = new PIXI.Sprite(canvasTex(256, 8, (g, w) => { const lg = g.createLinearGradient(0, 0, w, 0); lg.addColorStop(0, 'rgba(255,255,255,0)'); lg.addColorStop(0.5, 'rgba(255,255,255,0.95)'); lg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = lg; g.fillRect(0, 0, w, 8); }));
+  band.anchor.set(0.5); band.rotation = -0.4; band.width = 140; band.height = 900; band.blendMode = 'add';
+  const sweep = new PIXI.Container(); sweep.addChild(band, sweepMask); sweep.mask = sweepMask;
+  const wave = new PIXI.Graphics();
+  root.addChild(bg, glow, fl, word, wm, sweep, wave);
+  let t = 0;
+  return {
+    view: root,
+    length: 3000,
+    tick(el) {
+      t = el;
+      // flask slides up into the light (0-0.6 s), liquid fills (0.3-1.4 s), wordmark reveals (0.9-1.5 s), sweep (1.6-2.2 s)
+      const a = backOut(t / 600);
+      fl.y = 817 + (1 - a) * 220; fl.alpha = clamp(t / 300);
+      glow.alpha = clamp((t - 300) / 600) * (0.8 + 0.2 * Math.sin(t / 300));
+      const lv = ease((t - 300) / 1100);
+      lm.clear().rect(300, 830 - lv * 520, 560, 600).fill(0xffffff);
+      const wr = ease((t - 900) / 600);
+      wm.clear().rect(890, 380, 520 * wr, 420).fill(0xffffff);
+      const su = (t - 1600) / 600; band.x = 860 + 640 * ease(su); band.visible = su > 0 && su < 1;
+      // violet wave rises over the screen (2.3 - 3.0 s)
+      const wu = ease((t - 2300) / 700);
+      wave.clear();
+      if (wu > 0) { wave.moveTo(0, H); for (let x = 0; x <= W; x += 40) wave.lineTo(x, H - wu * (H + 120) + Math.sin(x / 120 + t / 120) * 26); wave.lineTo(W, H).closePath().fill(0x6a2bd9); }
+    },
+  };
+}
+
+// ---------- run ----------
+const stage = new PIXI.Container(); app.stage.addChild(stage);
+const fit = () => { const k = Math.max(app.screen.width / W, app.screen.height / H); stage.scale.set(k); stage.position.set((app.screen.width - W * k) / 2, (app.screen.height - H * k) / 2); };
+addEventListener('resize', fit); fit();
+let variant = 'A', loadMs = 6000, scene = null, ident = null, t0 = 0, revealAt = 0, overlay = null;
+function start() {
+  stage.removeChildren().forEach((c) => c.destroy({children: true}));
+  document.getElementById('note').textContent = NOTES[variant];
+  scene = gameScene(variant === 'B' ? railGauge() : tubeGauge());
+  stage.addChild(scene.view);
+  ident = variant === 'C' ? studioIdent() : null;
+  overlay = null;
+  if (ident) stage.addChild(ident.view);
+  t0 = performance.now();
+  scene.progress = 0;
+}
+app.ticker.add((tk) => {
+  if (!scene) return;
+  const dt = Math.min(50, tk.deltaMS);
+  const el = performance.now() - t0;
+  const identLeft = ident ? ident.length : 0;
+  // fake network: irregular steps; while the ident plays the game scene waits behind it
+  const lin = clamp((el - identLeft * 0.6) / loadMs);
+  scene.progress = Math.max(scene.progress, Math.min(lin, lin * rand(0.85, 1.1)));
+  if (ident) {
+    ident.tick(el);
+    if (el > ident.length) {
+      // the violet wave drains down to reveal the game scene
+      if (!overlay) { overlay = new PIXI.Graphics(); stage.addChild(overlay); ident.view.visible = false; revealAt = el; }
+      const u = ease((el - revealAt) / 650);
+      overlay.clear();
+      if (u < 1) { const e = H * u - 40; overlay.moveTo(0, e); for (let x = 0; x <= W; x += 40) overlay.lineTo(x, e + Math.sin(x / 120 + el / 120) * 26); overlay.lineTo(W, H + 10).lineTo(0, H + 10).closePath().fill(0x6a2bd9); }
+      else overlay.visible = false;
+    } else return;
+  }
+  scene.tick(dt);
+});
+for (const b of document.querySelectorAll('[data-v]')) b.onclick = () => { variant = b.dataset.v; document.querySelectorAll('[data-v]').forEach((x) => x.classList.toggle('on', x === b)); start(); };
+for (const b of document.querySelectorAll('[data-ms]')) b.onclick = () => { loadMs = +b.dataset.ms; document.querySelectorAll('[data-ms]').forEach((x) => x.classList.toggle('on', x === b)); start(); };
+addEventListener('click', (e) => { if (e.target.closest('#ui')) return; if (scene?.progress >= 1) start(); });
+window.labSet = (v) => { variant = v; start(); };
+start();
+</script>
+</body>
+</html>
