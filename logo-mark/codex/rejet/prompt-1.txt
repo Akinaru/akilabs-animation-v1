@@ -1,0 +1,7 @@
+Use your image generation tool to create ONE image and save it as planche-1.png in the current directory.
+
+The image: a professional logo exploration board for "Aki Labs", a premium slot game studio. 3 x 3 grid of 9 different logo marks, each centred in its cell, PURE WHITE on a PURE BLACK background, flat, no gradient, no colour, no text, no labels, no grid lines, generous spacing.
+
+Every mark is built around a laboratory flask (Erlenmeyer or round-bottom) and must work as a studio logo: simple, clean, bold, balanced, instantly readable at small size, but crafted and distinctive (not a generic stock icon). Inspiration: the logo of the slot studio Paperclip Gaming, a simple clean mark that does the job but is well designed. Explore different ideas across the 9 cells: negative space, a bubble or liquid inside, a monogram A or AL hidden in the flask, a rounded badge, a geometric construction, a single continuous line, a playful touch, a sharp modern cut. Consistent stroke weights, precise geometry, vector-like edges.
+
+Square image, high resolution. When done, print the saved file path.
