@@ -9,11 +9,13 @@
   .board { position: relative; } .board img { width: 100%; display: block; border: 1px solid #222; border-radius: 10px; }
   .board b { position: absolute; font: 700 18px system-ui; color: #ffb43a; transform: translate(10px, 8px); }
 </style></head><body><main>
-<h1>Logos Aki Labs : 3 planches, 18 propositions</h1>
+<h1>Logos Aki Labs : planches</h1>
 <p style="color:#aaa;margin:0">Dis-moi le numéro (ex. « 2-E ») de celui que tu veux, ou ceux à pousser plus loin.</p>
 <h2>1. Espace négatif : une idée découpée dans le flacon</h2><div class="board" data-n="1"><img src="planche-1.png"></div>
 <h2>2. Monogramme : le flacon fusionné avec A et L</h2><div class="board" data-n="2"><img src="planche-2.png"></div>
 <h2>3. Personnalité et mouvement</h2><div class="board" data-n="3"><img src="planche-3.png"></div>
+<h2>4. Fusion 3-D + 1-D : le ruban dessine un 7 (variantes)</h2><div class="board" data-n="4"><img src="planche-4.png"></div>
+<h2>5. Fusion 3-D + 1-D, poussée : ruban plus franc, 7 plus caché (pensé pour l'animation)</h2><div class="board" data-n="5"><img src="planche-5.png"></div>
 </main><script>
 document.querySelectorAll('.board').forEach((b) => 'ABCDEF'.split('').forEach((l, i) => {
   const t = document.createElement('b'); t.textContent = b.dataset.n + '-' + l;
