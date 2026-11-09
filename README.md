@@ -35,3 +35,11 @@ signature). `loader/proposals.html`, served from the Slots folder
 `http://127.0.0.1:3661/aki-labs-brand/loader/proposals.html`): A = studio glass-tube gauge (Aki violet liquid,
 bubbles, crystal milestones), B = the game's mine rail with the gold cart, C = premium studio ident (flask fills in
 the dark, glow, wordmark reveal, light sweep, violet wave) then A. Uses the game's own art in place (no copies).
+- Owner correction (same day): the loading belongs to the STUDIO ident, one for every slot, not to a game screen.
+  Reference = the Bow21 Studios ident (letters roll in like slot reels and lock left to right, accent drops with a
+  flash and a ring, subtitle and tagline type in, ~4.7 s). `loader/ident-proposals.html` (same server): 1 Rouleaux
+  (AKI / LABS roll like reels with motion blur, flask drops as the accent, ring + flash, "SLOT STUDIO" types in, the
+  flask fills with the loading, letters roll out), 2 Néon (letters light up as flickering violet neons, neon flask
+  fills, thin gauge; everything cuts off), 3 Flacon (flask in a light cone fills with the loading; when loaded a big
+  bubble pops and the letters jump into place; violet liquid wipe into the game). Each holds while loading, plays
+  its outro only once loaded and its intro has played. Letters rendered from Titan One (fonts/).

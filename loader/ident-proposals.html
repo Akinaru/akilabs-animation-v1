@@ -1,0 +1,301 @@
+<!doctype html>
+<!-- Studio ident + loader proposals (owner 2026-11-09): ONE loading for every Aki Labs slot, done by the studio
+     ident itself (no game loading screen). Premium reference: the Bow21 Studios ident (letters roll in like slot reels
+     with motion blur and lock left to right, an accent square drops in with a light flash and a ring, the subtitle and
+     the tagline type in, ~4.7 s). Each proposal shows the real loading progress while it holds, and plays its outro
+     into the game only once loaded AND its intro has played.
+     Served from the Slots folder: http://127.0.0.1:3661/aki-labs-brand/loader/ident-proposals.html -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intro studio : propositions</title>
+<script src="https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; background: #06020d; color: #eee; font: 14px system-ui, sans-serif; overflow: hidden; }
+  #ui { position: fixed; left: 12px; top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; z-index: 5; }
+  #ui button { background: rgba(20,10,40,.75); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 7px 14px; cursor: pointer; font: 600 14px system-ui; }
+  #ui button.on { background: #b07cff; color: #12061f; border-color: #b07cff; }
+  #note { position: fixed; left: 12px; top: 52px; max-width: 760px; color: #e6d6ff; z-index: 5; text-shadow: 0 1px 3px #000; font-size: 15px; }
+</style>
+</head>
+<body>
+<div id="ui">
+  <button data-v="R" class="on">1. Rouleaux</button>
+  <button data-v="N">2. Néon</button>
+  <button data-v="F">3. Flacon</button>
+  <span style="opacity:.6">|</span>
+  <button data-ms="1500">Chargement rapide</button>
+  <button data-ms="5000" class="on">Moyen</button>
+  <button data-ms="10000">Lent</button>
+  <button id="replay">Rejouer</button>
+</div>
+<div id="note"></div>
+<script type="module">
+const BR = '/aki-labs-brand/';
+const W = 1920, H = 1080;
+const NOTES = {
+  R: "1. Rouleaux : comme une machine à sous, les lettres AKI puis LABS défilent avec un flou de vitesse et se bloquent une par une. Le flacon tombe à côté (flash de lumière + onde), « SLOT STUDIO » s'écrit dessous. Le flacon se remplit avec le chargement. Sortie : les lettres repartent en rouleau vers le haut.",
+  N: "2. Néon : les lettres sont des néons violets qui s'allument une par une en grésillant, comme les hublots du jeu. Le flacon en néon se remplit de lumière avec le chargement. Sortie : tout s'éteint d'un coup.",
+  F: "3. Flacon : le flacon arrive dans un cône de lumière et se remplit avec le chargement, des bulles montent. À la fin il déborde, une grosse bulle éclate et libère les lettres AKI LABS qui sautent en place avec un reflet. Sortie : le liquide violet balaie l'écran.",
+};
+
+await Promise.all([
+  new FontFace('Titan', `url(${BR}fonts/TitanOne-Regular.ttf)`).load().then((f) => document.fonts.add(f)),
+]);
+const app = new PIXI.Application();
+await app.init({resizeTo: window, background: '#06020d', antialias: true, resolution: Math.min(2, devicePixelRatio || 1), autoDensity: true});
+document.body.prepend(app.canvas);
+const T = await PIXI.Assets.load([
+  ...['glass', 'liquid'].map((n) => ({alias: 'aki-' + n, src: BR + 'loader/assets/' + n + '.png'})),
+  {alias: 'game', src: '/grumpy-mole/art-source/antic-lab/full.png'},
+]);
+
+// ---------- helpers ----------
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ease = (u) => { u = clamp(u); return u * u * (3 - 2 * u); };
+const easeOut = (u) => 1 - (1 - clamp(u)) ** 3;
+const backOut = (u, s = 1.8) => { u = clamp(u); return 1 + (s + 1) * (u - 1) ** 3 + s * (u - 1) ** 2; };
+const rand = (a, b) => a + Math.random() * (b - a);
+const ctex = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); return PIXI.Texture.from(c); };
+const FLASK = new PIXI.Rectangle(317, 265, 527, 574); // flask box in the studio layers
+const sub = (t, r) => new PIXI.Texture({source: t.source, frame: r});
+
+/** One brand letter (Titan One: white / lavender face, thick plum outline, violet extrusion). */
+const letterCache = new Map();
+function letter(ch, size, face = '#ffffff', shadow = '#5b2bb5') {
+  const k = ch + size + face;
+  if (letterCache.has(k)) return letterCache.get(k);
+  const pad = size * 0.3;
+  const c = document.createElement('canvas').getContext('2d');
+  c.font = `${size}px Titan`;
+  const w = Math.ceil(c.measureText(ch).width + pad * 2), h = Math.ceil(size * 1.25 + pad * 2);
+  const t = ctex(w, h, (g) => {
+    g.font = `${size}px Titan`; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.lineJoin = 'round';
+    const x = w / 2, y = pad + size;
+    g.lineWidth = size * 0.17; g.strokeStyle = '#1d0c38';
+    for (let i = 0; i <= 6; i++) { g.fillStyle = shadow; g.strokeText(ch, x, y + i * size * 0.016); g.fillText(ch, x, y + i * size * 0.016); }
+    g.strokeText(ch, x, y); const lg = g.createLinearGradient(0, y - size, 0, y); lg.addColorStop(0, face); lg.addColorStop(1, face === '#ffffff' ? '#efe4ff' : '#a98ce8'); g.fillStyle = lg; g.fillText(ch, x, y);
+  });
+  letterCache.set(k, {t, w, h, adv: c.measureText(ch).width});
+  return letterCache.get(k);
+}
+/** Lays out a word: letter slots centred on (cx, cy). */
+function word(str, size, cx, cy, face, track = 0.02) {
+  const L = [...str].map((ch) => letter(ch, size, face));
+  const total = L.reduce((a, l) => a + l.adv, 0) + track * size * (L.length - 1);
+  let x = cx - total / 2;
+  return L.map((l, i) => { const slot = {ch: str[i], l, x: x + l.adv / 2, y: cy}; x += l.adv + track * size; return slot; });
+}
+const small = (s, size, fill = '#d9c8ff', spacing = 0.5) => new PIXI.Text({text: s, style: {fontFamily: 'Titan', fontSize: size, fill, letterSpacing: size * spacing}});
+function bgTex() {
+  return ctex(1024, 576, (g, w, h) => {
+    const r = g.createRadialGradient(w / 2, h * 0.48, 10, w / 2, h / 2, w * 0.62);
+    r.addColorStop(0, '#24113f'); r.addColorStop(0.55, '#110722'); r.addColorStop(1, '#05020b'); g.fillStyle = r; g.fillRect(0, 0, w, h);
+  });
+}
+const glowTex = ctex(256, 256, (g) => { const r = g.createRadialGradient(128, 128, 0, 128, 128, 128); r.addColorStop(0, 'rgba(190,140,255,0.9)'); r.addColorStop(0.4, 'rgba(150,90,255,0.35)'); r.addColorStop(1, 'rgba(120,60,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 256, 256); });
+
+/** The studio flask (art layers), its liquid masked to a level 0..1 (bottom -> neck). */
+function flask(scale) {
+  const c = new PIXI.Container();
+  const liq = new PIXI.Sprite(sub(T['aki-liquid'], FLASK)); const gl = new PIXI.Sprite(sub(T['aki-glass'], FLASK));
+  for (const s of [liq, gl]) { s.anchor.set(0.5, 1); }
+  const m = new PIXI.Graphics(); liq.mask = m;
+  c.addChild(liq, gl, m); c.scale.set(scale);
+  return {c, set(level, wob = 0) { const top = -40 - 470 * level; m.clear().moveTo(-300, 20); for (let x = -300; x <= 300; x += 20) m.lineTo(x, top + Math.sin(x / 40 + wob) * 6); m.lineTo(300, 20).closePath().fill(0xffffff); }};
+}
+function ring() {
+  const g = new PIXI.Graphics(); g.blendMode = 'add';
+  return {g, t0: -1, tick(t, x, y, max = 340) { if (this.t0 < 0) { g.visible = false; return; } const u = (t - this.t0) / 700; g.visible = u < 1; if (u >= 1) return; g.clear().circle(x, y, 20 + max * easeOut(u)).stroke({color: 0xc9a6ff, width: 6 * (1 - u) + 1, alpha: 0.9 * (1 - u)}); }};
+}
+
+// ---------- 1. Rouleaux ----------
+function reels() {
+  const root = new PIXI.Container();
+  const bg = new PIXI.Sprite(bgTex()); bg.width = W; bg.height = H; root.addChild(bg);
+  const glow = new PIXI.Sprite(glowTex); glow.anchor.set(0.5); glow.position.set(W / 2, 470); glow.scale.set(6, 3); glow.blendMode = 'add'; glow.alpha = 0; root.addChild(glow);
+  const A = word('AKI', 230, W / 2 - 60, 520, '#ffffff', 0.04), B = word('LABS', 120, W / 2 - 60, 680, '#c9b2ff', 0.16);
+  const POOL = 'AKILBSX7$';
+  const cols = [...A, ...B].map((s, i) => {
+    const big = i < 3, size = big ? 230 : 120, face = big ? '#ffffff' : '#c9b2ff';
+    const cell = s.l.h * 0.78;
+    const box = new PIXI.Container(); box.position.set(s.x, s.y - size * 0.45);
+    const strip = new PIXI.Container(); box.addChild(strip);
+    const n = 9 + i * 2; // later letters spin longer
+    for (let k = 0; k <= n; k++) { const L = letter(k === n ? s.ch : POOL[(k * 7 + i) % POOL.length], size, face); /* the strip runs down: it locks on its top sprite */ const sp = new PIXI.Sprite(L.t); sp.anchor.set(0.5); sp.y = -k * cell; strip.addChild(sp); }
+    const mask = new PIXI.Graphics().rect(-s.l.w / 2, -cell * 0.62, s.l.w, cell * 1.24).fill(0xffffff); box.addChild(mask); strip.mask = mask;
+    const blur = new PIXI.BlurFilter({strength: 0, quality: 3}); blur.strengthX = 0; strip.filters = [blur];
+    root.addChild(box);
+    return {box, strip, blur, n, cell, stop: (big ? 380 : 720) + (big ? i : i - 3) * 130, i};
+  });
+  const fl = flask(0.27); root.addChild(fl.c);
+  const fx = W / 2 + 300, fy = 690;
+  const rg = ring(); root.addChild(rg.g);
+  const tag = small('SLOT STUDIO', 34, '#b9a2e6', 0.6); tag.anchor.set(0.5); tag.position.set(W / 2 - 60, 790); root.addChild(tag);
+  let outAt = -1;
+  return {
+    view: root, intro: 2300,
+    tick(t, p) {
+      for (const c of cols) {
+        // spin: the strip runs down through n cells and locks with a small overshoot
+        const u = clamp(t / c.stop);
+        const pos = c.n * c.cell * (1 - (1 - u) ** 2.4) ;
+        const over = u >= 1 ? Math.sin(Math.PI * clamp((t - c.stop) / 220)) * -c.cell * 0.08 : 0;
+        let y = pos + over;
+        let speed = u < 1 ? (c.n * c.cell * 2.4 * (1 - u) ** 1.4) / c.stop : 0;
+        if (outAt >= 0) { const v = clamp((t - outAt - c.i * 50) / 420); y -= v * v * c.cell * 6; speed = v * 30; c.box.alpha = 1 - ease((v - 0.5) * 2); }
+        c.strip.y = y;
+        c.blur.strengthY = Math.min(40, speed * 6);
+        c.box.alpha = outAt >= 0 ? c.box.alpha : clamp(t / 150);
+      }
+      // the flask drops in as the accent once AKI is locked, splash + light flash
+      const dropAt = 820;
+      const du = clamp((t - dropAt) / 380);
+      fl.c.position.set(fx, fy - (1 - du * du) * 700); fl.c.alpha = du > 0 ? 1 : 0;
+      const land = t > dropAt + 380 ? Math.sin(Math.PI * clamp((t - dropAt - 380) / 200)) : 0;
+      fl.c.scale.set(0.27 * (1 + 0.12 * land), 0.27 * (1 - 0.12 * land));
+      if (t > dropAt + 380 && rg.t0 < 0) rg.t0 = t;
+      rg.tick(t, fx, fy - 60);
+      glow.alpha = rg.t0 > 0 ? 0.25 + 0.55 * Math.exp(-(t - rg.t0) / 400) : 0;
+      fl.set(p, t / 160);
+      // tagline types in
+      const tu = clamp((t - 1500) / 600); tag.text = 'SLOT STUDIO'.slice(0, Math.round(11 * tu)); tag.alpha = outAt >= 0 ? 1 - clamp((t - outAt) / 300) : 1;
+      if (outAt >= 0) { const v = clamp((t - outAt) / 400); fl.c.alpha = 1 - v; glow.alpha *= 1 - v; }
+    },
+    out(t) { outAt = t; return 700; },
+  };
+}
+
+// ---------- 2. Néon ----------
+const NEON = [[0, 0], [70, 0], [80, 0.9], [130, 0.9], [140, 0.05], [260, 0.05], [270, 0.6], [300, 0.6], [310, 0.1], [430, 0.1], [440, 1], [520, 1], [530, 0.45], [570, 0.45], [580, 1]];
+const neonAt = (ms) => { const i = NEON.findIndex(([t]) => t > ms); if (i < 0) return 1; const [t0, a0] = NEON[i - 1], [t1, a1] = NEON[i]; const u = (ms - t0) / (t1 - t0); return a0 + (a1 - a0) * u; };
+function neonGlyph(ch, size, color, glow) {
+  const pad = size * 0.5;
+  const c = document.createElement('canvas').getContext('2d'); c.font = `${size}px Titan`;
+  const w = Math.ceil(c.measureText(ch).width + pad * 2), h = Math.ceil(size * 1.3 + pad * 2);
+  const draw = (lit) => ctex(w, h, (g) => {
+    g.font = `${size}px Titan`; g.textAlign = 'center'; g.lineJoin = 'round';
+    const x = w / 2, y = pad + size;
+    if (lit) { g.shadowColor = glow; for (const [b, lw, a] of [[60, size * 0.07, 0.6], [25, size * 0.05, 0.9], [8, size * 0.035, 1]]) { g.shadowBlur = b; g.lineWidth = lw; g.strokeStyle = glow; g.globalAlpha = a; g.strokeText(ch, x, y); } g.shadowBlur = 0; g.globalAlpha = 1; g.lineWidth = size * 0.022; g.strokeStyle = '#fff4ff'; g.strokeText(ch, x, y); }
+    else { g.lineWidth = size * 0.05; g.strokeStyle = '#2a1a40'; g.strokeText(ch, x, y); g.lineWidth = size * 0.02; g.strokeStyle = '#4a3466'; g.strokeText(ch, x, y); }
+  });
+  return {on: draw(true), off: draw(false)};
+}
+function neon() {
+  const root = new PIXI.Container();
+  const bg = new PIXI.Sprite(ctex(1024, 576, (g, w, h) => { const r = g.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w * 0.6); r.addColorStop(0, '#140a24'); r.addColorStop(1, '#030107'); g.fillStyle = r; g.fillRect(0, 0, w, h); for (let i = 0; i < 2600; i++) { g.fillStyle = `rgba(255,255,255,${Math.random() * 0.025})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); } }));
+  bg.width = W; bg.height = H; root.addChild(bg);
+  const wash = new PIXI.Sprite(glowTex); wash.anchor.set(0.5); wash.position.set(W / 2, 560); wash.scale.set(7, 3.5); wash.blendMode = 'add'; wash.alpha = 0; root.addChild(wash);
+  const letters = [];
+  const place = (str, size, cy, color, glow, t0, track) => {
+    const L = word(str, size, W / 2 + 70, cy, '#ffffff', track);
+    L.forEach((s, i) => { const g = neonGlyph(s.ch, size, color, glow); const off = new PIXI.Sprite(g.off), on = new PIXI.Sprite(g.on); for (const sp of [off, on]) { sp.anchor.set(0.5, 0.62); sp.position.set(s.x, s.y); } on.blendMode = 'add'; on.alpha = 0; root.addChild(off, on); letters.push({on, t0: t0 + i * 170}); });
+  };
+  place('AKI', 230, 520, '#e7b8ff', '#b14dff', 300, 0.06);
+  place('LABS', 118, 690, '#ffd1f7', '#ff4fd8', 900, 0.2);
+  // neon flask: outline lit, inner light rising with the loading
+  const fl = flask(0.36); fl.c.position.set(W / 2 - 330, 760); root.addChild(fl.c);
+  fl.c.children[1].tint = 0x9c7cc8; fl.c.children[0].blendMode = 'add';
+  const fg = new PIXI.Sprite(glowTex); fg.anchor.set(0.5); fg.position.set(W / 2 - 330, 640); fg.scale.set(2.2); fg.blendMode = 'add'; root.addChild(fg);
+  const bar = new PIXI.Graphics(); root.addChild(bar);
+  let outAt = -1;
+  return {
+    view: root, intro: 2000,
+    tick(t, p) {
+      let lit = 0;
+      for (const l of letters) { const a = t >= l.t0 ? neonAt(t - l.t0) : 0; l.on.alpha = outAt >= 0 ? (t - outAt < 90 ? 1 : t - outAt < 160 ? 0.3 : 0) * a : a * (0.94 + 0.06 * Math.sin(t / 37 + l.t0)); lit += l.on.alpha; }
+      wash.alpha = (lit / letters.length) * 0.35;
+      const fa = clamp(t / 400) * (outAt >= 0 ? (t - outAt < 160 ? 1 : 0) : 1);
+      fl.c.alpha = fa; fl.set(p, t / 150); fg.alpha = (0.2 + 0.5 * p) * fa;
+      bar.clear();
+      const w = 560, x0 = W / 2 + 70 - w / 2, y = 800;
+      if (fa > 0) { bar.roundRect(x0, y, w, 6, 3).fill({color: 0x2a1a40}); bar.roundRect(x0, y, w * p, 6, 3).fill({color: 0xe7b8ff, alpha: fa}); }
+    },
+    out(t) { outAt = t; return 260; },
+  };
+}
+
+// ---------- 3. Flacon ----------
+function flaskIdent() {
+  const root = new PIXI.Container();
+  const bg = new PIXI.Sprite(bgTex()); bg.width = W; bg.height = H; root.addChild(bg);
+  const cone = new PIXI.Sprite(ctex(600, 1080, (g, w, h) => { const lg = g.createLinearGradient(0, 0, 0, h); lg.addColorStop(0, 'rgba(210,180,255,0.45)'); lg.addColorStop(1, 'rgba(160,110,255,0)'); g.fillStyle = lg; g.beginPath(); g.moveTo(w * 0.4, 0); g.lineTo(w * 0.6, 0); g.lineTo(w, h); g.lineTo(0, h); g.closePath(); g.fill(); }));
+  cone.anchor.set(0.5, 0); cone.position.set(W / 2, 0); cone.blendMode = 'add'; cone.filters = [new PIXI.BlurFilter({strength: 25, quality: 4})]; root.addChild(cone);
+  const glow = new PIXI.Sprite(glowTex); glow.anchor.set(0.5); glow.position.set(W / 2, 640); glow.scale.set(4); glow.blendMode = 'add'; root.addChild(glow);
+  const fl = flask(0.62); fl.c.position.set(W / 2, 900); root.addChild(fl.c);
+  const bub = new PIXI.Graphics(); root.addChild(bub);
+  const bubbles = [];
+  const L = [...word('AKI', 200, W / 2, 330, '#ffffff', 0.04), ...word('LABS', 104, W / 2, 470, '#c9b2ff', 0.16)].map((s, i) => { const sp = new PIXI.Sprite(s.l.t); sp.anchor.set(0.5, 0.62); sp.position.set(s.x, s.y); sp.scale.set(0); root.addChild(sp); return {sp, i}; });
+  const big = new PIXI.Graphics(); root.addChild(big);
+  const rg = ring(); root.addChild(rg.g);
+  let readyAt = -1, outAt = -1;
+  return {
+    view: root, intro: 1400,
+    tick(t, p) {
+      const a = backOut(t / 700, 1.2); fl.c.y = 900 + (1 - a) * 300; fl.c.alpha = clamp(t / 300);
+      const lv = readyAt >= 0 ? 1 : p * 0.95;
+      fl.set(lv, t / 140);
+      glow.alpha = 0.25 + 0.4 * lv;
+      if (Math.random() < 0.25) bubbles.push({x: W / 2 + rand(-60, 60), y: 860, r: rand(4, 10), v: rand(120, 260)});
+      bub.clear();
+      const surf = 900 - 40 * 0.62 - 470 * 0.62 * lv;
+      for (let i = bubbles.length - 1; i >= 0; i--) { const b = bubbles[i]; b.y -= b.v / 60; if (b.y < surf - (readyAt >= 0 ? 260 : 0)) { bubbles.splice(i, 1); continue; } bub.circle(b.x + Math.sin(b.y / 20) * 4, b.y, b.r).stroke({color: 0xe6d6ff, width: 2, alpha: 0.85}); }
+      // ready: a big bubble rises out of the neck and pops, the letters jump into place
+      if (readyAt >= 0) {
+        const u = clamp((t - readyAt) / 550);
+        big.clear(); if (u < 1) big.circle(W / 2, 560 - 150 * easeOut(u), 30 + 50 * u).fill({color: 0xb98cff, alpha: 0.35}).stroke({color: 0xf1e6ff, width: 4});
+        if (u >= 1 && rg.t0 < 0) rg.t0 = t;
+        for (const l of L) { const v = clamp((t - readyAt - 560 - l.i * 70) / 380); l.sp.scale.set(backOut(v, 2.2)); }
+      }
+      rg.tick(t, W / 2, 400, 520);
+      if (outAt >= 0) { const v = clamp((t - outAt) / 500); for (const l of L) l.sp.alpha = 1 - v; }
+    },
+    ready(t) { if (readyAt < 0) readyAt = t; return 1500; },
+    out(t) { outAt = t; return 0; },
+  };
+}
+
+// ---------- harness: fake loading, intro >= its own length, then outro into the game ----------
+const stage = new PIXI.Container(); app.stage.addChild(stage);
+const fit = () => { const k = Math.max(app.screen.width / W, app.screen.height / H); stage.scale.set(k); stage.position.set((app.screen.width - W * k) / 2, (app.screen.height - H * k) / 2); };
+addEventListener('resize', fit); fit();
+let v = 'R', loadMs = 5000, cur = null, game = null, wipe = null, t0 = 0, p = 0, phase = 'intro', phaseAt = 0, outLen = 0, readyLen = 0;
+function start() {
+  stage.removeChildren().forEach((c) => c.destroy({children: true}));
+  document.getElementById('note').textContent = NOTES[v];
+  game = new PIXI.Sprite(T.game); game.width = W; game.height = H; game.alpha = 0; stage.addChild(game);
+  cur = v === 'R' ? reels() : v === 'N' ? neon() : flaskIdent();
+  stage.addChild(cur.view);
+  wipe = new PIXI.Graphics(); stage.addChild(wipe);
+  t0 = performance.now(); p = 0; phase = 'intro';
+}
+app.ticker.add(() => {
+  if (!cur) return;
+  const t = performance.now() - t0;
+  const lin = clamp(t / loadMs);
+  p = Math.max(p, Math.min(lin, lin * rand(0.8, 1.1)));
+  if (lin >= 1) p = 1;
+  if (phase === 'intro' && t >= cur.intro && p >= 1) { phase = cur.ready ? 'ready' : 'out'; phaseAt = t; readyLen = cur.ready ? cur.ready(t) : 0; if (!cur.ready) outLen = cur.out(t); }
+  if (phase === 'ready' && t - phaseAt >= readyLen) { phase = 'out'; phaseAt = t; outLen = cur.out(t); }
+  cur.tick(t, p);
+  if (phase === 'out') {
+    const u = clamp((t - phaseAt - outLen * 0.5) / 600);
+    if (v === 'F') {
+      // the violet liquid sweeps the screen, then drains to show the game
+      const up = clamp((t - phaseAt) / 450), down = clamp((t - phaseAt - 500) / 600);
+      wipe.clear(); const top = H - (H + 80) * ease(up) + (H + 80) * ease(down);
+      if (down < 1) { wipe.moveTo(0, top); for (let x = 0; x <= W; x += 40) wipe.lineTo(x, top + Math.sin(x / 110 + t / 110) * 28); wipe.lineTo(W, H + 10).lineTo(0, H + 10).closePath().fill(0x6a2bd9); }
+      cur.view.visible = up < 1; game.alpha = up >= 1 ? 1 : 0;
+    } else { cur.view.alpha = 1 - u; game.alpha = u; }
+    if (t - phaseAt > outLen + 2600) start();
+  }
+});
+for (const b of document.querySelectorAll('[data-v]')) b.onclick = () => { v = b.dataset.v; document.querySelectorAll('[data-v]').forEach((x) => x.classList.toggle('on', x === b)); start(); };
+for (const b of document.querySelectorAll('[data-ms]')) b.onclick = () => { loadMs = +b.dataset.ms; document.querySelectorAll('[data-ms]').forEach((x) => x.classList.toggle('on', x === b)); start(); };
+document.getElementById('replay').onclick = start;
+window.labSet = (x) => { v = x; start(); };
+start();
+</script>
+</body>
+</html>
