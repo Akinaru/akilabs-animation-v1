@@ -73,3 +73,9 @@ wordmark fits 80 % of the width whatever the typeface. The chosen typeface will 
   measured on the font's A, stroke from its I stem): solid neck = apex, flaring body = legs; the white liquid rises
   inside with the loading and its surface ends as the A's crossbar (the small empty triangle left is the A's
   counter). To export as the studio logo (SVG) once approved.
+
+## Logo mark proposals (2026-11-09)
+Owner: the flask-A is not his logo; wants an ultra simple flask mark like Paperclip's, then used on the game's
+bonus button and in the loader. `logo-mark/index.html`: 8 one-colour 100 x 100 SVG marks (Trait, Liquide,
+Géométrique, Un seul fil, Rond, Bulles, Pastille, Biseau), each shown big, on a bonus-button mock-up, at 16 / 24 /
+32 px and in the loader lockups (horizontal and stacked, Archivo Black).
