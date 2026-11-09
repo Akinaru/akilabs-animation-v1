@@ -79,3 +79,13 @@ Owner: the flask-A is not his logo; wants an ultra simple flask mark like Paperc
 bonus button and in the loader. `logo-mark/index.html`: 8 one-colour 100 x 100 SVG marks (Trait, Liquide,
 Géométrique, Un seul fil, Rond, Bulles, Pastille, Biseau), each shown big, on a bonus-button mock-up, at 16 / 24 /
 32 px and in the loader lockups (horizontal and stacked, Archivo Black).
+
+## Official mark (2026-11-10)
+Owner picked logo 8-F (logo-mark/bridge/planche-8.png, ChatGPT bridge): a ribbon flask that draws a slot "7".
+- `logo-mark/final/aki-mark.svg`: vector (potrace from the 8-F crop, mean difference 1.9 / 255), white, viewBox
+  2268 x 2718. `aki-mark-512.png`: white on transparent, 512 square, for buttons. `8F-crop.png`: the source crop.
+- `fonts/ArchivoBlack-Regular.ttf` (+ OFL): the studio wordmark typeface.
+- Used in Grumpy Mole (copies, this repo is the source): bonus button `public/art/ui/aki/aki-mark.png`, favicon
+  `public/studio/aki-mark.svg`, loader `src/ui/screens/StudioSplash.svelte` (+ aki-mark.svg, ArchivoBlack ttf):
+  the 7 is drawn first (thick stroke along the 7 as a mask), the flask appears, AKI LABS rises, STUDIOS tracks out,
+  the hairline fills with the real loading, then recede + blur + fade into the welcome screen.
