@@ -1,0 +1,5 @@
+Reference 1 (mark "7A") and reference 2 (mark "7D") are my favourite versions of my studio logo "Aki Labs": a flask drawn with a bold white ribbon, a thin black slit between the ribbon and the flask outline, the liquid at the bottom, and the top + ribbon draw a slot "7". Keep everything as it is.
+
+One thing only bothers me: the bump at the TOP RIGHT, where the right outline of the flask meets the corner of the 7 (the small bulge on the right just under the top bar). Keep that bump, but move it LOWER down the right side: the right side of the 7 should go straight down from the top bar a bit longer before the bump, so the bump becomes a soft shoulder lower on the flask, and the 7's corner at the top right becomes clean.
+
+Make ONE image: a logo design board, 2 rows x 3 columns = 6 versions of references 1 and 2, with the bump moved progressively lower (from a little lower to much lower) and its shape slightly varied, everything else identical to the references. Solid opaque pure black background over the whole image, marks in flat pure white, crisp vector-like edges, no grey, no gradient, no shadow, no glow, no text, no labels, no grid lines. Landscape 3:2.
