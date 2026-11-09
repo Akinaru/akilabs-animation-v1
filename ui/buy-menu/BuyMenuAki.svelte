@@ -19,7 +19,8 @@
    * Aki Labs studio bonus-buy menu (studio standard, aki-labs-brand/ui/buy-menu): the live game stays behind, blurred
    * and dimmed; one row of cards (portrait: two rows of two), each a HUD glass panel with a full-bleed banner,
    * volatility bolts, name, price and the buy button; the balance / bet bar docked at the bottom of the screen with the
-   * HUD's - / + buttons; the HUD's square close button top right. Same material as HudAki: dark glass panels without a
+   * HUD's - / + buttons, a little above the bottom edge (the game's HUD is hidden meanwhile); the HUD's square close
+   * button top right. Same material as HudAki: dark glass panels without a
    * border, 14 px radius, square buttons at 12 % radius with the 1.5 px inset rim, violet gradients, Inter 800.
    * A card only opens the confirmation (onpick); a locked card shakes.
    */
@@ -390,19 +391,20 @@
   .bar {
     position: absolute;
     left: 50%;
-    bottom: 0;
+    bottom: calc(24px * var(--k));
     display: flex;
     align-items: center;
     gap: calc(22px * var(--k));
     height: calc(74px * var(--k));
     padding: 0 calc(16px * var(--k)) 0 calc(26px * var(--k));
-    border-radius: calc(14px * var(--k)) calc(14px * var(--k)) 0 0;
+    border-radius: calc(14px * var(--k));
     background: var(--glass);
-    box-shadow: 0 -4px 14px rgb(0 0 0 / 0.35);
+    box-shadow: 0 4px 14px rgb(0 0 0 / 0.35);
     transform: translateX(-50%);
     animation: rise 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.1) 0.15s both;
   }
   .portrait .bar {
+    bottom: calc(40px * var(--k));
     height: calc(110px * var(--k));
     gap: calc(30px * var(--k));
     padding: 0 calc(24px * var(--k)) 0 calc(36px * var(--k));
@@ -412,12 +414,14 @@
   }
   @keyframes rise {
     from {
-      transform: translate(-50%, 100%);
+      opacity: 0;
+      transform: translate(-50%, 30%);
     }
   }
   @keyframes sink {
     to {
-      transform: translate(-50%, 100%);
+      opacity: 0;
+      transform: translate(-50%, 30%);
     }
   }
   .kv {

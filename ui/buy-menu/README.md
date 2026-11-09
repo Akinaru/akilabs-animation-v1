@@ -14,12 +14,13 @@ menus (Toon Sailor closest): "aller ça me va".
   3. **name** in capitals ("FUSE BONUS");
   4. **price** for the current bet (25 px);
   5. **BUY** button: full width, violet gradient (social mode: the jurisdiction's word, e.g. GET).
-- **Balance / bet bar** docked to the bottom edge of the screen (rounded top corners only): BALANCE, separator,
-  [-] BET [+] with the HUD square buttons. Changing the bet re-prices the cards with a bump.
+- **Balance / bet bar** floating a little above the bottom edge (24 design px landscape, 40 portrait), all corners
+  rounded: BALANCE, separator, [-] BET [+] with the HUD square buttons. The game's own HUD is hidden while the menu is
+  open (it would show under the blur) and comes back on close. Changing the bet re-prices the cards with a bump.
 - **Close**: HUD square button top right; Escape and a click outside the cards close too.
 
 ## States and motion
-- Open: cards rise one after another (60 ms stagger, slight overshoot), the bar slides up from the bottom edge.
+- Open: cards rise one after another (60 ms stagger, slight overshoot), the bar rises and fades in.
 - Hover: the card lifts 10 px; its bolts pop one after the other; the button brightens. Nothing else.
 - Press: the card scales to 0.98. A card only opens the game's confirmation.
 - **Locked** (price above the balance): banner grey and dark, name and bolts at 55 %, price red `--aki-danger`, button
@@ -33,8 +34,8 @@ menus (Toon Sailor closest): "aller ça me va".
 
 ## Confirmation
 A card opens the purchase confirmation in the same material (grumpy-mole `Confirm.svelte` with `aki`): veil
-rgb(8 5 16 / 0.7), glass panel 360 px without border (14 px radius), the card's banner full width on top, small
-uppercase title (CONFIRM), the question ("Buy Fuse for $65.00?"), CANCEL = glass button with the inset rim, CONFIRM =
+rgb(8 5 16 / 0.7), glass panel 360 px without border (14 px radius), the card's banner full width on top, no title
+(the CONFIRM button already says it), the question ("Buy Fuse for $65.00?"), CANCEL = glass button with the inset rim, CONFIRM =
 violet gradient; both 44 px high, 7 px radius.
 
 ## Reference game
