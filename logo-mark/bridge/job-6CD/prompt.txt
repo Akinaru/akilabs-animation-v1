@@ -1,0 +1,7 @@
+Reference 1 (mark "6C") and reference 2 (mark "6D") are two versions of my studio logo for "Aki Labs": a flask drawn with a bold white ribbon, with a thin black slit between the ribbon and the flask outline, and the ribbon + the top together draw a slot-machine "7".
+
+- Reference 1: I like its overall shape. Problem: the right side of the 7 looks dented / crushed (where the top bar of the 7 turns down into the diagonal on the right, the shape looks bumped and uneven).
+- Reference 2: I like it too, but its top is too flat.
+- Most important: the "7" must be clearly visible in the shape (a confident top bar + a clean diagonal going down to the left), while it still reads as a flask first.
+
+Make ONE image: a logo design board, 2 rows x 3 columns = 6 refined versions combining reference 1's overall shape with a clean, smooth, confident 7 (no dent on the right, a top bar with some thickness and a crisp corner or a smooth bend, not flat), keeping the slit and the liquid at the bottom. Precise geometry, even curves, premium studio logo quality (benchmark: Paperclip Gaming's mark). Solid opaque pure black background over the whole image, marks in flat pure white, crisp vector-like edges, no grey, no gradient, no shadow, no glow, no text, no labels, no grid lines. Landscape 3:2.
