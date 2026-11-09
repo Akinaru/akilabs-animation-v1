@@ -1,0 +1,151 @@
+<!doctype html>
+<!-- Aki Labs neon studio ident + loader (owner 2026-11-09: the neon idea, rendered in 3D in Blender, very clean
+     studio render, adapted to mobile and desktop). Layers rendered by blender/neon.py + neon_post.py (loader/neon/):
+     wall.webp (sign off) and light-<part>.webp (what each lit part adds, glow + light on the wall), ADDED here with
+     their own flicker; the flask liquid is masked to the real loading progress. One square frame, framed on the
+     sign: cover on desktop, fitted on the sign on a phone (the wall fades to black at the edges).
+     http://127.0.0.1:3661/aki-labs-brand/loader/ident-neon.html (or 3660/ident-neon.html, then no game behind). -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intro néon Aki Labs</title>
+<script src="https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; color: #eee; font: 14px system-ui, sans-serif; overflow: hidden; }
+  #ui { position: fixed; left: 12px; top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; z-index: 5; }
+  #ui button { background: rgba(20,10,40,.75); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 7px 14px; cursor: pointer; font: 600 14px system-ui; }
+  #ui button.on { background: #b07cff; color: #12061f; border-color: #b07cff; }
+  #screen { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #000; box-shadow: 0 0 0 1px rgba(255,255,255,.12); }
+</style>
+</head>
+<body>
+<div id="ui">
+  <button data-f="full" class="on">Plein écran</button>
+  <button data-f="desktop">Desktop 16:9</button>
+  <button data-f="mobile">Mobile 9:16</button>
+  <span style="opacity:.6">|</span>
+  <button data-ms="1200">Chargement rapide</button>
+  <button data-ms="5000" class="on">Moyen</button>
+  <button data-ms="10000">Lent</button>
+  <button id="replay">Rejouer</button>
+</div>
+<div id="screen"></div>
+<script type="module">
+const S = 2048; // render size (square)
+const SIGN = {x0: 327, y0: 764, x1: 1561, y1: 1320}; // lit sign bbox in the render
+const LIQ = {y0: 950, y1: 1273}; // liquid (full) top / bottom in the render
+// liquid interior per row [y, left, right] (measured on light-liquid.webp): the surface line and bubbles stay inside
+const LIQ_ROWS = [[956, 531, 663], [964, 528, 666], [972, 524, 671], [980, 519, 676], [988, 514, 680], [996, 509, 684], [1004, 504, 690], [1012, 500, 695], [1020, 494, 700], [1028, 489, 705], [1036, 484, 711], [1044, 478, 717], [1052, 474, 722], [1060, 470, 726], [1068, 466, 730], [1076, 462, 735], [1084, 457, 739], [1092, 453, 743], [1100, 448, 748], [1108, 444, 752], [1116, 439, 755], [1124, 435, 761], [1132, 431, 765], [1140, 427, 769], [1148, 423, 773], [1156, 418, 778], [1164, 414, 782], [1172, 409, 786], [1180, 405, 791], [1188, 401, 795], [1196, 396, 800], [1204, 392, 804], [1212, 389, 806], [1220, 388, 807], [1228, 387, 808], [1236, 386, 809], [1244, 386, 806], [1252, 393, 800], [1260, 399, 793], [1268, 415, 768]];
+const span = (y) => { let best = LIQ_ROWS[0]; for (const r of LIQ_ROWS) if (Math.abs(r[0] - y) < Math.abs(best[0] - y)) best = r; return best; };
+const PARTS = ['flask', 'aki-0', 'aki-1', 'aki-2', 'labs-0', 'labs-1', 'labs-2', 'labs-3'];
+// when each tube catches (ms), like the game's portholes: dead, flashes, dead, catches
+const START = {flask: 250, 'aki-0': 700, 'aki-1': 930, 'aki-2': 1160, 'labs-0': 1550, 'labs-1': 1660, 'labs-2': 1770, 'labs-3': 1880};
+const INTRO = 2600;
+const NEON = [[0, 0], [60, 0], [70, 0.85], [120, 0.85], [130, 0.04], [250, 0.04], [260, 0.55], [290, 0.55], [300, 0.08], [400, 0.08], [410, 1], [480, 1], [490, 0.5], [520, 0.5], [530, 1]];
+const neonAt = (ms) => { if (ms < 0) return 0; const i = NEON.findIndex(([t]) => t > ms); if (i < 0) return 1; const [t0, a0] = NEON[i - 1], [t1, a1] = NEON[i]; return a0 + ((a1 - a0) * (ms - t0)) / (t1 - t0); };
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ease = (u) => { u = clamp(u); return u * u * (3 - 2 * u); };
+
+const host = document.getElementById('screen');
+const app = new PIXI.Application();
+await app.init({resizeTo: host, background: '#000', antialias: true, resolution: Math.min(2, devicePixelRatio || 1), autoDensity: true});
+host.appendChild(app.canvas);
+const base = './neon/';
+const T = await PIXI.Assets.load([{alias: 'wall', src: base + 'wall.webp'}, {alias: 'liquid', src: base + 'light-liquid.webp'}, ...PARTS.map((p) => ({alias: p, src: base + `light-${p}.webp`}))]);
+let gameTex = null;
+try { gameTex = await PIXI.Assets.load('/grumpy-mole/art-source/antic-lab/full.png'); } catch {}
+
+// ---------- scene ----------
+const world = new PIXI.Container(); app.stage.addChild(world);
+const game = new PIXI.Sprite(gameTex ?? PIXI.Texture.WHITE); game.alpha = 0; app.stage.addChildAt(game, 0); if (!gameTex) game.tint = 0x111111;
+const wall = new PIXI.Sprite(T.wall); world.addChild(wall);
+const lights = Object.fromEntries(PARTS.map((p) => { const s = new PIXI.Sprite(T[p]); s.blendMode = 'add'; s.alpha = 0; world.addChild(s); return [p, s]; }));
+// liquid: the inside of the flask is cut at the level; its light on the wall (outside the flask) grows with the level
+const liquid = new PIXI.Sprite(T.liquid); liquid.blendMode = 'add'; world.addChild(liquid);
+const lm = new PIXI.Graphics(); world.addChild(lm); liquid.mask = lm;
+const spill = new PIXI.Sprite(T.liquid); spill.blendMode = 'add'; world.addChild(spill);
+const sm = new PIXI.Graphics(); world.addChild(sm); spill.mask = sm;
+const interior = (fromY, grow = 0) => { const rows = LIQ_ROWS.filter((r) => r[0] >= fromY); if (!rows.length) return []; return [...rows.map((r) => [r[1] - grow, r[0]]), ...rows.reverse().map((r) => [r[2] + grow, r[0]])].flat(); };
+sm.rect(-S, -S, 3 * S, 3 * S).fill(0xffffff);
+{ const top = LIQ_ROWS[0]; LIQ_ROWS.unshift([top[0] - 80, top[1] - 4, top[2] + 4], [top[0] - 30, top[1] - 4, top[2] + 4]); sm.poly(interior(0, 14)).cut(); LIQ_ROWS.splice(0, 2); } // the hole reaches above the full liquid's top edge
+// bubbles and the bright surface line of the liquid (additive, clipped to the liquid)
+const fizz = new PIXI.Graphics(); fizz.blendMode = 'add'; world.addChild(fizz);
+const fm = new PIXI.Graphics(); world.addChild(fm); fizz.mask = fm;
+const bubbles = [];
+// edges: the square wall fades into black (a phone shows more than the square vertically)
+const edge = new PIXI.Sprite((() => { const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d'); const r = g.createRadialGradient(256, 266, 120, 256, 256, 330); r.addColorStop(0, 'rgba(0,0,0,0)'); r.addColorStop(1, 'rgba(0,0,0,1)'); g.fillStyle = r; g.fillRect(0, 0, 512, 512); for (const [y0, y1] of [[0, 110], [512, 402]]) { const lg = g.createLinearGradient(0, y0, 0, y1); lg.addColorStop(0, 'rgba(0,0,0,1)'); lg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = lg; g.fillRect(0, Math.min(y0, y1), 512, 110); } return PIXI.Texture.from(c); })());
+edge.width = edge.height = S; world.addChild(edge);
+const black = new PIXI.Graphics(); app.stage.addChild(black);
+
+// framing: cover on wide screens; on narrow ones, fit the sign with a margin (the rest is black)
+function frame() {
+  const w = app.screen.width, h = app.screen.height;
+  const cx = (SIGN.x0 + SIGN.x1) / 2, cy = (SIGN.y0 + SIGN.y1) / 2;
+  const cover = Math.max(w / S, h / S);
+  const fitSign = Math.min((w * 0.86) / (SIGN.x1 - SIGN.x0), (h * 0.6) / (SIGN.y1 - SIGN.y0));
+  const k = Math.min(cover * 1.08, fitSign);
+  return {k, x: w / 2 - cx * k, y: h / 2 - cy * k};
+}
+function layout(push = 0) {
+  const f = frame();
+  world.scale.set(f.k * (1 + push));
+  const cx = (SIGN.x0 + SIGN.x1) / 2, cy = (SIGN.y0 + SIGN.y1) / 2;
+  world.position.set(app.screen.width / 2 - cx * f.k * (1 + push), app.screen.height / 2 - cy * f.k * (1 + push));
+  if (gameTex) { const gk = Math.max(app.screen.width / gameTex.width, app.screen.height / gameTex.height); game.scale.set(gk); game.position.set((app.screen.width - gameTex.width * gk) / 2, (app.screen.height - gameTex.height * gk) / 2); }
+}
+
+// ---------- timeline ----------
+let t0 = 0, loadMs = 5000, p = 0, outAt = -1, glitch = {part: null, at: 0};
+function start() { t0 = performance.now(); p = 0; outAt = -1; game.alpha = 0; world.alpha = 1; }
+app.ticker.add(() => {
+  const t = performance.now() - t0;
+  // fake network progress (the game would call setProgress)
+  const lin = clamp(t / loadMs); p = Math.max(p, Math.min(lin, lin * (0.8 + Math.random() * 0.3))); if (lin >= 1) p = 1;
+  if (outAt < 0 && p >= 1 && t >= INTRO + 400) outAt = t;
+  // slow push-in on the sign over the whole ident (studio dolly)
+  layout(0.05 * ease(t / 6000));
+  // wall comes out of the dark
+  wall.alpha = ease(t / 500);
+  // hum + now and then one tube stutters (live sign)
+  if (t > INTRO + 800 && !glitch.part && Math.random() < 0.004) glitch = {part: PARTS[1 + Math.floor(Math.random() * 7)], at: t};
+  const out = outAt >= 0 ? t - outAt : -1;
+  for (const part of PARTS) {
+    let a = neonAt(t - START[part]) * (0.96 + 0.04 * Math.sin(t / 41 + START[part]) * Math.sin(t / 97));
+    if (glitch.part === part) { const g = t - glitch.at; a *= g < 70 ? 0.15 : g < 130 ? 1 : g < 170 ? 0.3 : 1; if (g > 200) glitch.part = null; }
+    // outro: a last surge, then the power goes (two stutters, out)
+    if (out >= 0) a *= out < 120 ? 1.15 : out < 170 ? 0.1 : out < 230 ? 0.8 : out < 280 ? 0 : 0;
+    lights[part].alpha = a;
+  }
+  // liquid: lit with the flask, its level = loading progress, a moving meniscus
+  const la = neonAt(t - START.flask - 200) * (out >= 0 ? (out < 280 ? 1 : 0) : 1);
+  liquid.alpha = la * (0.9 + 0.1 * Math.sin(t / 300));
+  const level = LIQ.y1 - (LIQ.y1 - LIQ.y0 + 10) * ease(Math.min(p, 1)) ;
+  spill.alpha = la * (0.15 + 0.85 * ease(Math.min(p, 1)));
+  const poly = interior(level, 10);
+  for (const g of [lm, fm]) { g.clear(); if (poly.length) g.poly(poly).fill(0xffffff); }
+  if (la > 0.5 && Math.random() < 0.35) { const [, l0, r0] = span(LIQ.y1 - 12); bubbles.push({x: l0 + 18 + Math.random() * (r0 - l0 - 36), y: LIQ.y1 - 12, r: 3 + Math.random() * 6, v: 60 + Math.random() * 120}); }
+  fizz.clear();
+  for (let i = bubbles.length - 1; i >= 0; i--) { const b = bubbles[i]; b.y -= b.v / 60; const [, bl, br] = span(b.y); if (b.y < level + 8) { bubbles.splice(i, 1); continue; } b.x = Math.max(bl + b.r + 6, Math.min(br - b.r - 6, b.x)); fizz.circle(b.x + Math.sin(b.y / 18) * 4, b.y, b.r).stroke({color: 0xffd6ff, width: 2.5, alpha: 0.8 * la}); }
+  { const [, l0, r0] = span(level + 6); fizz.moveTo(l0 + 6, level + 6); for (let x = l0 + 6; x <= r0 - 6; x += 12) fizz.lineTo(x, level + 6 + Math.sin(x / 26 + t / 180) * 5); fizz.stroke({color: 0xffc8ff, width: 7, alpha: 0.7 * la, cap: 'round'}); }
+  // after the power cut: the wall goes dark, the game comes up
+  if (out >= 0) { const u = clamp((out - 300) / 500); world.alpha = 1 - u; game.alpha = gameTex ? clamp((out - 600) / 500) : 0; if (out > 4000) start(); }
+});
+
+// ---------- UI ----------
+const FRAMES = {full: null, desktop: 16 / 9, mobile: 9 / 16};
+function setFrame(f) {
+  const r = FRAMES[f];
+  if (!r) { host.style.width = '100vw'; host.style.height = '100vh'; }
+  else { const vw = innerWidth * 0.94, vh = innerHeight * 0.86; const w = Math.min(vw, vh * r); host.style.width = w + 'px'; host.style.height = w / r + 'px'; }
+  requestAnimationFrame(() => app.resize());
+}
+for (const b of document.querySelectorAll('[data-f]')) b.onclick = () => { document.querySelectorAll('[data-f]').forEach((x) => x.classList.toggle('on', x === b)); setFrame(b.dataset.f); start(); };
+for (const b of document.querySelectorAll('[data-ms]')) b.onclick = () => { loadMs = +b.dataset.ms; document.querySelectorAll('[data-ms]').forEach((x) => x.classList.toggle('on', x === b)); start(); };
+document.getElementById('replay').onclick = start;
+addEventListener('resize', () => setFrame(document.querySelector('[data-f].on').dataset.f));
+window.labFrame = (f) => { document.querySelector(`[data-f="${f}"]`).click(); };
+setFrame('full'); start();
+</script>
+</body>
+</html>

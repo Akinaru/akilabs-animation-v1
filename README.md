@@ -43,3 +43,19 @@ the dark, glow, wordmark reveal, light sweep, violet wave) then A. Uses the game
   fills, thin gauge; everything cuts off), 3 Flacon (flask in a light cone fills with the loading; when loaded a big
   bubble pops and the letters jump into place; violet liquid wipe into the game). Each holds while loading, plays
   its outro only once loaded and its intro has played. Letters rendered from Titan One (fonts/).
+
+## Neon studio ident (3D, 2026-11-09)
+Owner picked the neon idea, rendered in 3D in Blender, very clean, adapted to mobile and desktop.
+- `blender/neon.py` (Blender 5.1, EEVEE): real glass tubes along the Titan One letters AKI / LABS and the flask
+  silhouette (studio profile), a dark brick wall, a dim key light, and per part a coloured spill light. Renders
+  `off.png` and one `lit-<part>.png` per part (aki-0..2, labs-0..3, flask, liquid) at 2048 x 2048 (about 1 min):
+  `Blender -b -P blender/neon.py -- blender/neon-raw 2048 all`.
+- `blender/neon_post.py`: `loader/neon/wall.webp` + `light-<part>.webp` = what each lit part adds (tube, light on
+  the wall, bloom), linear-light maths, ~350 KB in all: `python3 blender/neon_post.py blender/neon-raw loader/neon`.
+- `loader/ident-neon.html`: the layers ADDED with their own neon catch (flask, A, K, I, then L A B S), live hum and
+  a stutter now and then; the flask liquid rises with the real loading progress (masked inside the flask, its light
+  on the wall grows with the level, bubbles and a bright surface line); slow push-in; outro = surge then power cut,
+  then the game. Framing: one square frame, cover on desktop, fitted on the sign on a phone (wall fades to black).
+  Previews: full screen / desktop 16:9 / mobile 9:16 buttons.
+- No green screen: the neon glow is semi-transparent and keys badly; additive light layers over the rendered wall
+  give the exact 3D render on any format.
