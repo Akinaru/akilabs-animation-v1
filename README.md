@@ -22,4 +22,7 @@ Animated studio intro for Aki Labs slot games: a cartoon Erlenmeyer flask drops,
 2. Integrate the loader into the slot template.
 3. Export layers (glass back, liquid, wave loop, glass front, wordmark) for a dynamic loader in PixiJS or Spine, with the liquid level driven by real loading progress and bubbles generated in code.
 
+## In-game UI standard
+`ui/`: the studio UI material (tokens) and standard components, starting with the bonus-buy menu (`ui/buy-menu/`).
+
 Competitor research captures are kept locally and are not part of this repository.

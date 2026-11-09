@@ -1,0 +1,21 @@
+/* Aki Labs studio UI tokens: the in-game HUD material (reference: grumpy-mole
+   packages/components-slot-ui/src/HudAki.svelte). Every studio menu (HUD, bonus buy, popovers) uses these. */
+:root {
+  /* materials */
+  --aki-glass: rgb(14 10 24 / 0.84); /* panels and cards: dark glass, NO border */
+  --aki-rim: rgb(255 255 255 / 0.16); /* 1.5 px INSET rim: square buttons only */
+  --aki-sep: rgb(255 255 255 / 0.14); /* 1.5 px separators inside a panel */
+  --aki-accent: #a98bff;
+  --aki-violet: linear-gradient(180deg, #5a36c9, #2c1a63); /* active / hovered state */
+  --aki-violet-hi: linear-gradient(160deg, #9b74ff, #4d24c4); /* primary action (buy, bonus) */
+  --aki-magenta: linear-gradient(180deg, #d0369a, #6e1050); /* second active state */
+  --aki-gold: #ffcf3a; /* volatility bolts */
+  --aki-danger: #ff7a8a; /* price above the balance */
+  /* shapes: square, very light rounding */
+  --aki-radius-panel: 14px; /* panels, cards (design px, scaled with the game) */
+  --aki-radius-button: 12%; /* square buttons */
+  --aki-radius-action: 7px; /* wide action buttons */
+  /* type */
+  --aki-font: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; /* 800 everywhere */
+  --aki-label-tracking: 0.08em; /* small uppercase labels at 70 % opacity (BALANCE, BET) */
+}
