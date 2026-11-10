@@ -19,10 +19,17 @@
   .ident { display: flex; flex-direction: column; align-items: center; transition: transform calc(.9s * var(--k)) cubic-bezier(.4,0,.2,1), filter calc(.9s * var(--k)) cubic-bezier(.4,0,.2,1); }
   .leaving .ident { transform: scale(.95); filter: blur(8px); }
   .mark { height: min(26vh, 30vw, 230px); width: auto; overflow: visible; }
-  .seven { fill: none; stroke: #fff; stroke-width: 640; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100 100; stroke-dashoffset: 100; animation: draw calc(.95s * var(--k)) cubic-bezier(.55,0,.25,1) calc(.15s * var(--k)) forwards; }
-  @keyframes draw { to { stroke-dashoffset: 0; } }
-  .rest { opacity: 0; animation: rest calc(.7s * var(--k)) cubic-bezier(.2,.8,.2,1) calc(.85s * var(--k)) forwards; }
-  @keyframes rest { from { opacity: 0; filter: blur(14px); } to { opacity: 1; filter: blur(0); } }
+  /* 1. the 7 (top bar + diagonal ribbon) appears whole: it settles in, sharpening */
+  .p7 { opacity: 0; transform-box: fill-box; transform-origin: 50% 40%; animation: seven calc(.75s * var(--k)) cubic-bezier(.2,.8,.2,1) calc(.15s * var(--k)) forwards; }
+  @keyframes seven { from { opacity: 0; transform: scale(.9) translateY(3%); filter: blur(10px); } to { opacity: 1; transform: none; filter: blur(0); } }
+  /* 2. the connections: the flask's right side grows down from the 7's corner and closes into the bowl */
+  .grow { fill: none; stroke: #fff; stroke-width: 900; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100 100; stroke-dashoffset: 100; animation: grow calc(.95s * var(--k)) cubic-bezier(.6,0,.3,1) calc(.8s * var(--k)) forwards; }
+  @keyframes grow { to { stroke-dashoffset: 0; } }
+  /* 3. once connected the pieces give way to the whole mark (no seam) */
+  .whole { opacity: 0; animation: whole 1ms linear calc(1.8s * var(--k)) forwards; }
+  .pieces { animation: hide 1ms linear calc(1.8s * var(--k)) forwards; }
+  @keyframes whole { to { opacity: 1; } }
+  @keyframes hide { to { opacity: 0; } }
   .word { margin-top: min(4.5vh, 34px); display: flex; font: 400 min(9vh, 11vw, 84px)/.9 'Aki Archivo Black', system-ui, sans-serif; color: #f4f4f6; letter-spacing: -.005em; }
   .sp { width: .28em; }
   .ch { display: inline-block; overflow: hidden; padding: .05em .01em; }
@@ -47,15 +54,25 @@
 <script type="module">
 const svg = await (await fetch('../logo-mark/final/aki-mark.svg')).text();
 const shape = svg.slice(svg.indexOf('<g'), svg.lastIndexOf('</g>') + 4);
+// the mark cut along its own drawing (px of a 756 x 906 render, x3 = viewBox): the 7 is everything above the
+// corner (y 365) and left of the slit; the rest is the flask's right side and the bowl
+const P7 = [[0, 0], [756, 0], [756, 362], [537, 365], [520, 400], [500, 430], [470, 460], [440, 490], [400, 520], [350, 550], [300, 580], [200, 610], [150, 640], [135, 670], [118, 700], [108, 730], [105, 760], [110, 790], [126, 820], [150, 845], [150, 906], [0, 906]].map(([x, y]) => `${x * 3},${y * 3}`).join(' ');
+// the connection path: down the right side from the 7's corner, into the bowl's right, then across the bowl
+const GROW = 'M 1665 1080 L 1770 1800 L 2100 2220 L 1500 2300 L 390 2290';
+const MARK = `<defs>
+  <clipPath id="c7"><polygon points="${P7}"/></clipPath>
+  <mask id="mrest" maskUnits="userSpaceOnUse" x="0" y="0" width="2268" height="2718"><path class="grow" d="${GROW}" pathLength="100"/><polygon points="${P7}" fill="#000"/></mask>
+</defs>
+<g class="pieces"><g class="p7" clip-path="url(#c7)">${shape}</g><g mask="url(#mrest)">${shape}</g></g>
+<g class="whole">${shape}</g>`;
 await document.fonts.load("84px 'Aki Archivo Black'");
 let k = 1, loop = true, withOut = true, timers = [];
 function play() {
   timers.forEach(clearTimeout); timers = [];
   document.body.style.setProperty('--k', k);
-  const word = [...'AKI LABS'].map((c, i) => c === ' ' ? '<span class="sp"></span>' : `<span class="ch"><span style="animation-delay:${(1100 + i * 60) * k}ms">${c}</span></span>`).join('');
+  const word = [...'AKI LABS'].map((c, i) => c === ' ' ? '<span class="sp"></span>' : `<span class="ch"><span style="animation-delay:${(1350 + i * 60) * k}ms">${c}</span></span>`).join('');
   document.getElementById('stage').innerHTML = `<div class="splash"><div class="ident">
-    <svg class="mark" viewBox="0 0 2268 2718" fill="#f4f4f6"><defs><mask id="seven" maskUnits="userSpaceOnUse"><path class="seven" d="M 220 420 L 1960 230 L 360 2330" pathLength="100"/></mask></defs>
-    <g mask="url(#seven)">${shape}</g><g class="rest">${shape}</g></svg>
+    <svg class="mark" viewBox="0 0 2268 2718" fill="#f4f4f6">${MARK}</svg>
     <div class="word">${word}</div><div class="sub">Studios</div><div class="bar"><div class="fill"></div></div></div></div>`;
   // the hairline fills once drawn (a smooth 1.2 s fill stands for the loading)
   const fill = document.querySelector('.fill');
