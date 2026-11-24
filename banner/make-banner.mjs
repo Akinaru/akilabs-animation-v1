@@ -21,10 +21,10 @@ const VARIANTS = {
   violet: 'linear-gradient(135deg, #2a0f4d 0%, #5b1f8f 50%, #c2367f 100%)',
   sunset: 'linear-gradient(135deg, #ff7a2f 0%, #f0508f 100%)',
 };
-const SIZES = [[1920, 600], [1500, 500], [1200, 630], [1080, 1080]];
+const SIZES = [[1920, 1080], [1920, 600], [1500, 500], [1200, 630], [1080, 1080]];
 
 const page = (bg, w, h) => {
-  const u = Math.min(h / 600, w / 1000); // layout unit: the stack fits the height and keeps side room
+  const u = Math.min(h / 600, w / 1000, 1.4); // layout unit: the stack fits the height and keeps side room
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 @font-face{font-family:'Aki Archivo Black';src:url('${font}')}
 html,body{margin:0;width:${w}px;height:${h}px;overflow:hidden}
@@ -33,9 +33,8 @@ body{background:${bg};display:grid;place-items:center;font-family:'Aki Archivo B
 .mark{height:${200 * u}px;width:${200 * u * 0.8344}px;display:block}
 .mark svg{width:100%;height:100%;fill:#f4f4f6;filter:drop-shadow(0 ${6 * u}px ${18 * u}px rgb(0 0 0 / .35))}
 .word{margin-top:${36 * u}px;font-size:${104 * u}px;line-height:.9;letter-spacing:.01em;white-space:nowrap}
-.line{margin-top:${30 * u}px;width:${70 * u}px;height:${3 * u}px;border-radius:2px;background:rgb(255 255 255 / .55)}
-.tag{margin-top:${26 * u}px;font-size:${26 * u}px;letter-spacing:.38em;padding-left:.38em;opacity:.78;white-space:nowrap}
-</style></head><body><div class="ident"><div class="mark">${mark}</div><div class="word">AKI LABS</div><div class="line"></div><div class="tag">${TAGLINE}</div></div></body></html>`;
+.tag{margin-top:${34 * u}px;font-size:${26 * u}px;letter-spacing:.38em;padding-left:.38em;opacity:.78;white-space:nowrap}
+</style></head><body><div class="ident"><div class="mark">${mark}</div><div class="word">AKI LABS</div><div class="tag">${TAGLINE}</div></div></body></html>`;
 };
 
 const browser = await chromium.launch({
